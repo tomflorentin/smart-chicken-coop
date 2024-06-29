@@ -9,5 +9,6 @@
 
 void Log(String const &message);
 String getJsonLogs();
+bool Notify(String const &message);
 
 #endif //POULAILLER_FUNC_H

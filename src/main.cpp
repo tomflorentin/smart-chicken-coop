@@ -4,20 +4,22 @@
 #include "func.h"
 
 WebServer server(80);
-DoorController door(27, 26, 33, 25, 14, 35);
+DoorController door(27, 26, 33, 25, 14, 36);
 
 void setup() {
     Serial.begin(9200);
     server.setup();
     door.setup();
-}
-
-
-void loop(){
     while(!server.isConnected()) {
         delay(1000);
         server.reconnect();
     }
+    Notify("Poulailler started");
+}
+
+
+void loop(){
+
     server.work();
     door.work();
     Order action = server.getAction();

@@ -1,2 +1,2 @@
 .pio
-src/include/credentials.h
+include/credentials.h

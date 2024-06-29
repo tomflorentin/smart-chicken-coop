@@ -22,8 +22,6 @@ void DoorController::setup() {
 }
 
 void DoorController::work() {
-    Log("Closed limit switch : " + String(closedLimitSwitch.read()));
-    Log("Opened limit switch : " + String(openedLimitSwitch.read()));
     if (status == DoorStatus::OPENING) {
         if (openedLimitSwitch.read()) {
             Log("OPENED LIMIT SWITCH READ");
