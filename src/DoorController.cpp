@@ -26,7 +26,9 @@ void DoorController::work() {
         if (openedLimitSwitch.read()) {
             Log("OPENED LIMIT SWITCH READ");
             status = DoorStatus::OPENED;
-            lastOrderStatus = LastOrderStatus::DONE;
+            if (lastOrderStatus != LastOrderStatus::NO_LAST_ORDER) {
+                lastOrderStatus = LastOrderStatus::DONE;
+            }
             this->motor.standby();
         }
     } else if (status == DoorStatus::CLOSING) {
@@ -34,7 +36,9 @@ void DoorController::work() {
         if (closedLimitSwitch.read()) {
             Log("CLOSE LIMIT SWITCH READ");
             status = DoorStatus::CLOSED;
-            lastOrderStatus = LastOrderStatus::DONE;
+            if (lastOrderStatus != LastOrderStatus::NO_LAST_ORDER) {
+                lastOrderStatus = LastOrderStatus::DONE;
+            }
             this->motor.standby();
             this->laserSafety.stopLaser();
         }
@@ -56,6 +60,7 @@ void DoorController::work() {
 }
 
 void DoorController::executeOrder(Order order) {
+    this->lastOrderStatus = LastOrderStatus::NO_LAST_ORDER;
     switch (order) {
         case Order::OPEN_DOOR:
             Log("Opening door");

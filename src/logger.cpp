@@ -7,7 +7,7 @@
 #include "lib/LinkedList.h"
 
 LinkedList<String> logs;
-const short LINKED_LIST_MAX_SIZE = 30;
+const short LINKED_LIST_MAX_SIZE = 100;
 
 void Log(String const &message) {
     Serial.println(message);

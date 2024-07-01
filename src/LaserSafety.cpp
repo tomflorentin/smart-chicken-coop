@@ -9,8 +9,8 @@
 const int LASER_TIMEOUT = 50000;
 const int LASER_PICK_INTERVAL = 100;
 
-const int SAFE_MINIMUM_DIFF = 100;
-const float SAFE_MINIMUM_RATIO = 1.2;
+const int SAFE_MINIMUM_DIFF = 10;
+const float SAFE_MINIMUM_RATIO = 1.1;
 
 LaserSafety::LaserSafety(uint8_t _emitPin, uint8_t _receivePin) : emitPin(_emitPin), receivePin(_receivePin) {
 }
@@ -21,7 +21,8 @@ void LaserSafety::setup() {
 }
 
 bool LaserSafety::isSafe() const {
-    return this->_isSafe;
+    Log("Failures in a row : " + String(this->failuresInARow));
+    return this->failuresInARow <= 5;
 }
 
 bool LaserSafety::startLaser() {
@@ -30,21 +31,13 @@ bool LaserSafety::startLaser() {
     this->measurementStartedTime = currentTime;
     this->pickingStartedTime = currentTime;
     this->pickingStoppedTime = currentTime;
-    uint16_t laserOffBrightness = receivePin.readRaw();
-    emitPin.write(true);
-    delay(LASER_PICK_INTERVAL);
-    uint16_t laserOnBrightness = receivePin.readRaw();
-    emitPin.write(false);
-    this->_isSafe = this->areResultsSafe(laserOffBrightness, laserOnBrightness);
-    if (!this->_isSafe) {
+    this->failuresInARow = 0;
+    if (!this->makeInitialPicks()) {
         this->laserMeasuring = false;
         emitPin.write(false);
         Log("Failed to start laser, brightness ratio is too low");
-        Log("Laser off brightness : " + String(laserOffBrightness));
-        Log("Laser on brightness : " + String(laserOnBrightness));
         return false;
     }
-    Log("Laser on brightness : " + String(laserOnBrightness) + " Laser off brightness : " + String(laserOffBrightness));
     return true;
 }
 
@@ -69,8 +62,13 @@ void LaserSafety::work() {
             this->pickingStoppedTime = currentTime;
             emitPin.write(false);
             Log("Laser on brightness : " + String(this->pickingBrightnessLaserOn) + " Laser off brightness : " + String(this->pickingBrightnessLaserOff));
-            this->_isSafe = this->areResultsSafe(this->pickingBrightnessLaserOff, this->pickingBrightnessLaserOn);
-            Log("Picking results : " + String(this->_isSafe));
+            if (this->areResultsSafe(this->pickingBrightnessLaserOff, this->pickingBrightnessLaserOn)) {
+                Log("Results are safe");
+                this->failuresInARow = 0;
+            } else {
+                Log("Results are not safe. Failures : " + String(this->failuresInARow) + "/5" );
+                this->failuresInARow++;
+            }
         }
     } else {
         if (currentTime - this->pickingStoppedTime > LASER_PICK_INTERVAL) {
@@ -97,7 +95,31 @@ bool LaserSafety::areResultsSafe(uint16_t laserOffBrightness, uint16_t laserOnBr
         return false;
     if (laserOnBrightness - laserOffBrightness < SAFE_MINIMUM_DIFF)
         return false;
-    if (laserOnBrightness / laserOffBrightness < SAFE_MINIMUM_RATIO)
+    if ((float)laserOnBrightness / (float)laserOffBrightness < SAFE_MINIMUM_RATIO)
         return false;
     return true;
+}
+
+bool LaserSafety::makeInitialPicks() {
+    uint8_t success = 0;
+    uint8_t failed = 0;
+    for (int i = 0; i < 5; i++) {
+        int brightnessLaserOff = receivePin.readRaw();
+        emitPin.write(true);
+        delay(LASER_PICK_INTERVAL);
+        int brightnessLaserOn = receivePin.readRaw();
+        Log("Pick " + String(i) + " Laser on brightness : " + String(brightnessLaserOn) + " Laser off brightness : " + String(brightnessLaserOff));
+        emitPin.write(false);
+        delay(LASER_PICK_INTERVAL);
+        if (this->areResultsSafe(brightnessLaserOff, brightnessLaserOn)) {
+            Log("Pick " + String(i) + " is safe");
+            success++;
+        } else {
+            Log("Pick " + String(i) + " is not safe");
+            failed++;
+        }
+    }
+    Log("Success : " + String(success) + " Failed : " + String(failed) + " Result : " + String(success > failed ? "SAFE" : "NOT SAFE"));
+    return success > failed;
+
 }

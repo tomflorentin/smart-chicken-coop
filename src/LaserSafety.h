@@ -22,12 +22,13 @@ class LaserSafety : public ISetupable {
     void stopLaser();
 
 private:
-    bool _isSafe = false;
+    int failuresInARow = 0;
     bool laserMeasuring = false;
     unsigned long measurementStartedTime = 0;
     DigitalPinWriter emitPin;
     AnalogPinReader receivePin;
 
+    bool makeInitialPicks();
     bool areResultsSafe(uint16_t laserOffBrightness, uint16_t laserOnBrightness);
     bool isPicking = false;
     unsigned long pickingStartedTime = 0;
