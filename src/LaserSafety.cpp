@@ -7,7 +7,7 @@
 #include "LaserSafety.h"
 
 const int LASER_TIMEOUT = 50000;
-const int LASER_PICK_INTERVAL = 100;
+const int LASER_PICK_INTERVAL = 50;
 
 const int SAFE_MINIMUM_DIFF = 10;
 const float SAFE_MINIMUM_RATIO = 1.1;
@@ -22,7 +22,7 @@ void LaserSafety::setup() {
 
 bool LaserSafety::isSafe() const {
     Log("Failures in a row : " + String(this->failuresInARow));
-    return this->failuresInARow <= 5;
+    return this->failuresInARow <= 3;
 }
 
 bool LaserSafety::startLaser() {

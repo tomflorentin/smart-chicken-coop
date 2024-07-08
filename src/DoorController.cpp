@@ -8,7 +8,7 @@ DoorController::DoorController(uint8_t motorPin1, uint8_t motorPin2, uint8_t clo
                                uint8_t openedLimitSwitchPin, uint8_t laserEmitPin, uint8_t laserReceivePin)
                                : laserSafety(laserEmitPin, laserReceivePin),
                                closedLimitSwitch(closedLimitSwitchPin, true, true),
-                               openedLimitSwitch(openedLimitSwitchPin, true, true),
+                               openedLimitSwitch(openedLimitSwitchPin, true, false),
                                motor(motorPin1, motorPin2)
 {
 
