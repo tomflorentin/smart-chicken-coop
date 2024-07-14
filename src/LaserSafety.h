@@ -20,6 +20,7 @@ class LaserSafety : public ISetupable {
     bool isSafe() const;
     bool startLaser();
     void stopLaser();
+    bool makeInitialPicks();
 
 private:
     int failuresInARow = 0;
@@ -28,7 +29,6 @@ private:
     DigitalPinWriter emitPin;
     AnalogPinReader receivePin;
 
-    bool makeInitialPicks();
     bool areResultsSafe(uint16_t laserOffBrightness, uint16_t laserOnBrightness);
     bool isPicking = false;
     unsigned long pickingStartedTime = 0;

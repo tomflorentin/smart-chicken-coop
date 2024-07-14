@@ -35,7 +35,7 @@ void loop(){
     Infos infos;
     infos.doorIsOpen = door.getStatus() == DoorStatus::OPENED;
     infos.doorIsClosed = door.getStatus() == DoorStatus::CLOSED;
-    infos.isDoorMoving = door.getStatus() == DoorStatus::OPENING || door.getStatus() == DoorStatus::CLOSING || door.getStatus() == DoorStatus::FORCE_CLOSING;
+    infos.isDoorMoving = door.getStatus() == DoorStatus::OPENING || door.getStatus() == DoorStatus::SAFE_CLOSING || door.getStatus() == DoorStatus::FORCE_CLOSING;
     infos.isDoorBlocked = door.getLastOrderStatus() == LastOrderStatus::ERROR_BLOCKED;
     infos.lastOrderStatus = door.getLastOrderStatus();
 

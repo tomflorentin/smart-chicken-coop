@@ -97,7 +97,7 @@ String WebServer::handleRequest(const String &request) {
         return standard_accepted;
     }
     else if (request.indexOf("GET /action/close") != -1) {
-        this->action = CLOSE_DOOR;
+        this->action = SAFE_CLOSE_DOOR;
         return standard_accepted;
     } else if (request.indexOf("GET /action/force-close") != -1) {
         this->action = FORCE_CLOSE_DOOR;
