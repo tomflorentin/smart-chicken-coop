@@ -12,13 +12,11 @@ L298Controller::L298Controller(uint8_t in1, uint8_t in2)
           pin2(in2) {}
 
 void L298Controller::forward(uint8_t speed) {
-    Log("Forward");
     this->pin2.write(0);
     this->pin1.write(speed);
 }
 
 void L298Controller::backward(uint8_t speed) {
-    Log("Backward");
     this->pin1.write(0);
     this->pin2.write(speed);
 }
@@ -29,7 +27,6 @@ void L298Controller::brake() {
 }
 
 void L298Controller::standby() {
-    Log("Standby");
     this->pin1.write(0);
     this->pin2.write(0);
 }

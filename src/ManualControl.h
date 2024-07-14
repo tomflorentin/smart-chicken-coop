@@ -8,7 +8,8 @@
 
 #include <cstdint>
 #include "typings.h"
-#include "PinReader/DigitalPinReader.hpp"
+#include "PinReader/TouchPinReader.h"
+#include "PinReader/MultiTouchPinReader.h"
 
 class ManualControl {
 public:
@@ -18,7 +19,7 @@ public:
 
 private:
     Order action = Order::NONE;
-    DigitalPinReader pin;
+    MultiTouchPinReader pin;
     bool isPressed = false;
 };
 

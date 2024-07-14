@@ -30,9 +30,12 @@ private:
     LaserSafety laserSafety;
     DigitalPinReader closedLimitSwitch;
     DigitalPinReader openedLimitSwitch;
-    DoorStatus status = DoorStatus::CLOSED;
+    DoorStatus status;
     LastOrderStatus lastOrderStatus = LastOrderStatus::NO_LAST_ORDER;
     L298Controller motor;
+    unsigned int orderStartTime = 0;
+
+    void finalizeOrder(DoorStatus _status);
 };
 
 

@@ -7,7 +7,7 @@
 #include "LaserSafety.h"
 
 const int LASER_TIMEOUT = 50000;
-const int LASER_PICK_INTERVAL = 50;
+const int LASER_PICK_INTERVAL = 5;
 
 const int SAFE_MINIMUM_DIFF = 10;
 const float SAFE_MINIMUM_RATIO = 1.1;
@@ -61,6 +61,7 @@ void LaserSafety::work() {
             this->isPicking = false;
             this->pickingStoppedTime = currentTime;
             emitPin.write(false);
+            this->totalPicks++;
             Log("Laser on brightness : " + String(this->pickingBrightnessLaserOn) + " Laser off brightness : " + String(this->pickingBrightnessLaserOff));
             if (this->areResultsSafe(this->pickingBrightnessLaserOff, this->pickingBrightnessLaserOn)) {
                 Log("Results are safe");
@@ -86,9 +87,14 @@ void LaserSafety::work() {
 void LaserSafety::stopLaser() {
     this->laserMeasuring = false;
     emitPin.write(false);
+    if (this->totalPicks) {
+        Log("Picked a total of " + String(this->totalPicks) + " times");
+    }
+    this->totalPicks = 0;
 }
 
 bool LaserSafety::areResultsSafe(uint16_t laserOffBrightness, uint16_t laserOnBrightness) {
+//    return laserOnBrightness > laserOffBrightness;
     if (laserOffBrightness == 0 && laserOnBrightness != 0)
         return true;
     if (laserOffBrightness == laserOnBrightness)

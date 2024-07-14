@@ -35,6 +35,7 @@ private:
     unsigned long pickingStoppedTime = 0;
     uint16_t pickingBrightnessLaserOff = 0;
     uint16_t pickingBrightnessLaserOn = 0;
+    int totalPicks = 0;
 };
 
 

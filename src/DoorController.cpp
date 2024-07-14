@@ -19,28 +19,24 @@ void DoorController::setup() {
     closedLimitSwitch.setup();
     openedLimitSwitch.setup();
     motor.setup();
+    if (closedLimitSwitch.read()) {
+        status = DoorStatus::CLOSED;
+    } else if (openedLimitSwitch.read()) {
+        status = DoorStatus::OPENED;
+    } else {
+        this->status = DoorStatus::FORCE_CLOSING;
+    }
 }
 
 void DoorController::work() {
     if (status == DoorStatus::OPENING) {
         if (openedLimitSwitch.read()) {
-            Log("OPENED LIMIT SWITCH READ");
-            status = DoorStatus::OPENED;
-            if (lastOrderStatus != LastOrderStatus::NO_LAST_ORDER) {
-                lastOrderStatus = LastOrderStatus::DONE;
-            }
-            this->motor.standby();
+            finalizeOrder(DoorStatus::OPENED);
         }
     } else if (status == DoorStatus::CLOSING) {
         this->laserSafety.work();
         if (closedLimitSwitch.read()) {
-            Log("CLOSE LIMIT SWITCH READ");
-            status = DoorStatus::CLOSED;
-            if (lastOrderStatus != LastOrderStatus::NO_LAST_ORDER) {
-                lastOrderStatus = LastOrderStatus::DONE;
-            }
-            this->motor.standby();
-            this->laserSafety.stopLaser();
+            finalizeOrder(DoorStatus::CLOSED);
         }
         if (!laserSafety.isSafe()) {
             Log("LASER SAFETY NOT SAFE");
@@ -51,16 +47,16 @@ void DoorController::work() {
         }
     } else if (status == DoorStatus::FORCE_CLOSING) {
         if (closedLimitSwitch.read()) {
-            Log("CLOSE LIMIT SWITCH READ");
-            status = DoorStatus::CLOSED;
-            lastOrderStatus = LastOrderStatus::DONE;
-            this->motor.standby();
+            finalizeOrder(DoorStatus::CLOSED);
         }
     }
 }
 
 void DoorController::executeOrder(Order order) {
     this->lastOrderStatus = LastOrderStatus::NO_LAST_ORDER;
+    if (order != Order::NONE) {
+        this->orderStartTime = millis();
+    }
     switch (order) {
         case Order::OPEN_DOOR:
             Log("Opening door");
@@ -105,4 +101,16 @@ DoorStatus DoorController::getStatus() const {
 
 LastOrderStatus DoorController::getLastOrderStatus() const {
     return this->lastOrderStatus;
+}
+
+void DoorController::finalizeOrder(DoorStatus _doorStatus) {
+    this->motor.standby();
+    this->laserSafety.stopLaser();
+    unsigned int endMillis = millis();
+    unsigned int time = endMillis - this->orderStartTime;
+    Log("Order finished in " + String((float)time/1000.f) + "s");
+    this->status = _doorStatus;
+    if (lastOrderStatus != LastOrderStatus::NO_LAST_ORDER) {
+        lastOrderStatus = LastOrderStatus::DONE;
+    }
 }
