@@ -36,7 +36,7 @@ private:
     unsigned int orderStartTime = 0;
     unsigned int stepStartedTime = 0;
 
-    void finalizeOrder(DoorStatus _status);
+    void finalizeOrder(const DigitalPinReader & pin, DoorStatus _status);
 };
 
 

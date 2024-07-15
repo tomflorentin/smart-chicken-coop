@@ -36,9 +36,9 @@ void MultiTouchPinReader::work() {
             Log("Too soon");
         }
     } else {
-        if (currentTime - this->lastTouchTime > this->maxMillis) {
+        if (currentTime - this->lastTouchTime > this->maxMillis * 2) {
             if (this->currentNumberOfTouches != 0) {
-                Log("Reset");
+                Log("Timeout Reset");
             }
             this->currentNumberOfTouches = 0;
         }

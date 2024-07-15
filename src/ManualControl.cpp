@@ -7,7 +7,7 @@
 #include "func.h"
 
 
-ManualControl::ManualControl(uint8_t _pin) : pin(_pin, 30, 500, 3) {
+ManualControl::ManualControl(uint8_t _pin) : pin(_pin, 100, 500, 3) {
 }
 
 Order ManualControl::getAction() {

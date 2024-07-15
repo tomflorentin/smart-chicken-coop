@@ -4,6 +4,7 @@
 
 #include "DoorController.h"
 #define STEPS_TIME 1000
+#define CONFIRM_TIME 500
 
 DoorController::DoorController(uint8_t motorPin1, uint8_t motorPin2, uint8_t closedLimitSwitchPin,
                                uint8_t openedLimitSwitchPin, uint8_t laserEmitPin, uint8_t laserReceivePin)
@@ -32,11 +33,11 @@ void DoorController::setup() {
 void DoorController::work() {
     if (status == DoorStatus::OPENING) {
         if (openedLimitSwitch.read()) {
-            finalizeOrder(DoorStatus::OPENED);
+            finalizeOrder(openedLimitSwitch, DoorStatus::OPENED);
         }
     } else if (status == DoorStatus::SAFE_CLOSING) {
         if (closedLimitSwitch.read()) {
-            finalizeOrder(DoorStatus::CLOSED);
+            finalizeOrder(closedLimitSwitch, DoorStatus::CLOSED);
         } else if (millis() - stepStartedTime >= STEPS_TIME) {
             this->motor.standby();
             if (this->laserSafety.makeInitialPicks()) {
@@ -50,7 +51,7 @@ void DoorController::work() {
         }
     } else if (status == DoorStatus::FORCE_CLOSING) {
         if (closedLimitSwitch.read()) {
-            finalizeOrder(DoorStatus::CLOSED);
+            finalizeOrder(closedLimitSwitch, DoorStatus::CLOSED);
         }
     }
 }
@@ -107,8 +108,16 @@ LastOrderStatus DoorController::getLastOrderStatus() const {
     return this->lastOrderStatus;
 }
 
-void DoorController::finalizeOrder(DoorStatus _doorStatus) {
+void DoorController::finalizeOrder(const DigitalPinReader & endPin, DoorStatus _doorStatus) {
+    this->motor.suspendAction();
+    delay(CONFIRM_TIME);
+    if (!endPin.read()) {
+        Log("Error, end pin not reached");
+        this->motor.resumeAction();
+        return;
+    }
     this->motor.standby();
+
     this->laserSafety.stopLaser();
     unsigned int endMillis = millis();
     unsigned int time = endMillis - this->orderStartTime;

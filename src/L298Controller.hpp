@@ -20,10 +20,15 @@ public:
     void brake() override;
     void standby() override;
     void setup() override;
+    void suspendAction();
+    void resumeAction();
+
 
 private:
     AnalogPinWriter pin1;
     AnalogPinWriter pin2;
+    uint8_t lastValue1 = 0;
+    uint8_t lastValue2 = 0;
 };
 
 

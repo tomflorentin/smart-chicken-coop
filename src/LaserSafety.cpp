@@ -9,8 +9,8 @@
 const int LASER_TIMEOUT = 50000;
 const int LASER_PICK_INTERVAL = 5;
 
-const int SAFE_MINIMUM_DIFF = 10;
-const float SAFE_MINIMUM_RATIO = 1.1;
+const int SAFE_MINIMUM_DIFF = 5;
+const float SAFE_MINIMUM_RATIO = 1.05;
 
 LaserSafety::LaserSafety(uint8_t _emitPin, uint8_t _receivePin) : emitPin(_emitPin), receivePin(_receivePin) {
 }

@@ -27,9 +27,13 @@ void TouchPinReader::work() {
 
     if (currentTime - this->sampleStartTime > this->sampleRate) {
         if (this->sampleTrue > this->sampleFalse) {
+            Log("Activated " + String(this->hasBeenReset));
             this->isActivated = this->hasBeenReset;
             this->hasBeenReset = false;
         } else {
+            if (!this->hasBeenReset) {
+                Log("has been Reset");
+            }
             this->hasBeenReset = true;
         }
         this->sampleStartTime = currentTime;
