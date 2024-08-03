@@ -22,8 +22,10 @@ void ManualControl::work(DoorStatus doorStatus) {
     if (currentState && !this->isPressed) {
         Log("Touch detected, current status: " + String(doorStatus));
         if (doorStatus == DoorStatus::OPENED || doorStatus == DoorStatus::OPENING) {
+            Notify("Action manuelle : fermeture de la porte");
             this->action = Order::FORCE_CLOSE_DOOR;
         } else if (doorStatus == DoorStatus::CLOSED || doorStatus == DoorStatus::SAFE_CLOSING) {
+            Notify("Action manuelle : ouverture de la porte");
             this->action = Order::OPEN_DOOR;
         }
     }

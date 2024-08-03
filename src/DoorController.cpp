@@ -33,11 +33,11 @@ void DoorController::setup() {
 void DoorController::work() {
     if (status == DoorStatus::OPENING) {
         if (openedLimitSwitch.read()) {
-            finalizeOrder(openedLimitSwitch, DoorStatus::OPENED);
+            finalizeOrder(openedLimitSwitch, DoorStatus::OPENED, "ouverte");
         }
     } else if (status == DoorStatus::SAFE_CLOSING) {
         if (closedLimitSwitch.read()) {
-            finalizeOrder(closedLimitSwitch, DoorStatus::CLOSED);
+            finalizeOrder(closedLimitSwitch, DoorStatus::CLOSED, "fermée (avec laser)");
         } else if (millis() - stepStartedTime >= STEPS_TIME) {
             this->motor.standby();
             if (this->laserSafety.makeInitialPicks()) {
@@ -45,13 +45,14 @@ void DoorController::work() {
                 this->stepStartedTime = millis();
             } else {
                 Log("Laser blocked, reverse");
+                Notify("ERREUR : Laser bloqué, inversion");
                 this->motor.backward(255);
                 this->status = DoorStatus::OPENING;
             }
         }
     } else if (status == DoorStatus::FORCE_CLOSING) {
         if (closedLimitSwitch.read()) {
-            finalizeOrder(closedLimitSwitch, DoorStatus::CLOSED);
+            finalizeOrder(closedLimitSwitch, DoorStatus::CLOSED, "fermée (de force)");
         }
     }
 }
@@ -108,7 +109,7 @@ LastOrderStatus DoorController::getLastOrderStatus() const {
     return this->lastOrderStatus;
 }
 
-void DoorController::finalizeOrder(const DigitalPinReader & endPin, DoorStatus _doorStatus) {
+void DoorController::finalizeOrder(const DigitalPinReader & endPin, DoorStatus _doorStatus, String const &statusStr) {
     this->motor.suspendAction();
     delay(CONFIRM_TIME);
     if (!endPin.read()) {
@@ -122,6 +123,7 @@ void DoorController::finalizeOrder(const DigitalPinReader & endPin, DoorStatus _
     unsigned int endMillis = millis();
     unsigned int time = endMillis - this->orderStartTime;
     Log("Order finished in " + String((float)time/1000.f) + "s");
+    Notify("Porte " + statusStr + " en " + String((float)time/1000.f) + "s");
     this->status = _doorStatus;
     if (lastOrderStatus != LastOrderStatus::NO_LAST_ORDER) {
         lastOrderStatus = LastOrderStatus::DONE;

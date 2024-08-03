@@ -16,7 +16,7 @@ void setup() {
         delay(1000);
         server.reconnect();
     }
-    Notify("Poulailler started");
+    Notify("Poulailler démarré");
 }
 
 
