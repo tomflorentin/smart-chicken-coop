@@ -8,8 +8,8 @@
 #include "credentials.h"
 
 
-const char* ssid = WIFI_SSID;
-const char* password = WIFI_PASSWORD;
+const char* webserver_ssid = WIFI_SSID;
+const char* webserver_password = WIFI_PASSWORD;
 
 const char* standard_accepted = "{ \"status\": \"accepted\" }";
 
@@ -18,15 +18,13 @@ WebServer::WebServer(short port) : server(port) {
 }
 
 bool WebServer::setup() {
-   Serial.print("Connecting to ");
-   Log(ssid);
-   WiFi.begin(ssid, password);
+   Log("Connecting to ");
+   Log(webserver_ssid);
+   WiFi.begin(webserver_ssid, webserver_password);
    while (WiFi.status() != WL_CONNECTED) {
      delay(500);
-     Serial.print(".");
+     Log("Connecting to wifi...");
    }
-    Log("");
-    Log("WiFi connected.");
     Log("IP address: ");
     Log(WiFi.localIP().toString());
     server.begin();
@@ -92,15 +90,20 @@ String WebServer::handleRequest(const String &request) {
     else if (request.indexOf("GET /logs") != -1) {
         return "{ \"status\": \"accepted\", \"logs\": " + getJsonLogs() + " }";
     }
-    else if (request.indexOf("GET /action/open") != -1) {
-        this->action = OPEN_DOOR;
+    else if (request.indexOf("GET /action/alert/enable") != -1) {
+        this->action = ENABLE_ALERT;
         return standard_accepted;
     }
-    else if (request.indexOf("GET /action/close") != -1) {
-        this->action = SAFE_CLOSE_DOOR;
+    else if (request.indexOf("GET /action/alert/disable") != -1) {
+        this->action = DISABLE_ALERT;
         return standard_accepted;
-    } else if (request.indexOf("GET /action/force-close") != -1) {
-        this->action = FORCE_CLOSE_DOOR;
+    }
+    else if (request.indexOf("GET /action/fence/enable") != -1) {
+        this->action = ENABLE_ELECTRIC_FENCE;
+        return standard_accepted;
+    }
+    else if (request.indexOf("GET /action/fence/disable") != -1) {
+        this->action = DISABLE_ELECTRIC_FENCE;
         return standard_accepted;
     }
     return "{ \"status\": \"unknown command\" }";

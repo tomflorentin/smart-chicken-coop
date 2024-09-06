@@ -27,9 +27,10 @@ enum LastOrderStatus {
 
 enum Order : uint8_t {
     NONE = 0,
-    SAFE_CLOSE_DOOR = 1,
-    OPEN_DOOR = 2,
-    FORCE_CLOSE_DOOR = 3,
+    ENABLE_ALERT = 1,
+    DISABLE_ALERT = 2,
+    ENABLE_ELECTRIC_FENCE = 3,
+    DISABLE_ELECTRIC_FENCE = 4,
 };
 
 struct Infos {
