@@ -1,6 +1,6 @@
 import { Topic } from './mqtt/mqtt.service';
 
-interface Log {
+export interface Log {
   date: Date;
   topic: Topic;
   message: string;

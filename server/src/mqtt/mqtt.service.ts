@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { connect, MqttClient } from 'mqtt';
-import State from '../state';
+import State, { AlertStatus, DoorStatus, FenceStatus } from '../state';
 import {
   addIntermediateStatusToTasksWithTopic,
   concludeTasksWithTopic,
@@ -48,7 +48,7 @@ export class MqttService implements OnModuleInit {
   private handlePoulaillerDoor(message: string) {
     console.log('door', message);
     State.poulailler.lastSeen = new Date();
-    State.poulailler.door.status = message;
+    State.poulailler.door.status = message as DoorStatus;
     if (message === 'opened' || message === 'closed') {
       concludeTasksWithTopic(Topic.poulaillerDoor, message);
     } else {
@@ -59,7 +59,7 @@ export class MqttService implements OnModuleInit {
   private handleEnclosAlert(message: string) {
     console.log('alert', message);
     State.enclos.lastSeen = new Date();
-    State.enclos.alertSystem.status = message;
+    State.enclos.alertSystem.status = message as AlertStatus;
 
     if (message === 'enabled' || message === 'disabled') {
       concludeTasksWithTopic(Topic.enclosAlert, message);
@@ -69,7 +69,7 @@ export class MqttService implements OnModuleInit {
   private handleEnclosFence(message: string) {
     console.log('fence', message);
     State.enclos.lastSeen = new Date();
-    State.enclos.electricFence.status = message;
+    State.enclos.electricFence.status = message as FenceStatus;
 
     if (message === 'enabled' || message === 'disabled') {
       concludeTasksWithTopic(Topic.enclosFence, message);

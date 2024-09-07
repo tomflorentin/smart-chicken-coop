@@ -28,6 +28,8 @@ services:
         dockerfile: Dockerfile
     environment:
       NODE_ENV: "production"
-      PORT: "3000"
+      PORT: "3001"
       MOSQUITTO_HOST: "mosquitto"
       MOSQUITTO_PORT: "1883"
+    ports:
+      - "3001:3001"

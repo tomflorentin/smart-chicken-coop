@@ -17,18 +17,37 @@ export enum DoorOrder {
   STATUS = 'status',
 }
 
+export enum DoorStatus {
+  OPENED = 'opened',
+  CLOSED = 'closed',
+  OPENING = 'opening',
+  FORCE_CLOSING = 'force_closing',
+  SAFE_CLOSING = 'safe_closing',
+}
+
+export enum FenceStatus {
+  ENABLED = 'enabled',
+  DISABLED = 'disabled',
+}
+
+export enum AlertStatus {
+  ENABLED = 'enabled',
+  DISABLED = 'disabled',
+  ALERT = 'alert',
+}
+
 export interface StateType {
   enclos: {
     lastSeen: Date;
     electricFence: {
       lastOrder: FenceOrder;
       lastOrderDate: Date;
-      status: string;
+      status: FenceStatus;
     };
     alertSystem: {
       lastDetectionDetector: number;
       lastDetectionDate: Date;
-      status: string;
+      status: AlertStatus;
       lastOrder: AlertOrder;
       lastOrderDate: Date;
     };
@@ -38,7 +57,7 @@ export interface StateType {
     door: {
       lastOrder: DoorOrder;
       lastOrderDate: Date;
-      status: string;
+      status: DoorStatus;
     };
   };
 }

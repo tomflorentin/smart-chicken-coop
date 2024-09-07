@@ -3,6 +3,7 @@ import { AppService } from './app.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import State from './state';
 import { Tasks } from './tasks';
+import { Logs } from './logs';
 
 @Controller()
 export class AppController {
@@ -26,6 +27,11 @@ export class AppController {
   @Get('tasks')
   getTasks() {
     return Tasks.sort((a, b) => +a.timeStarted - +b.timeStarted);
+  }
+
+  @Get('logs')
+  getLogs() {
+    return Logs.sort((a, b) => +a.date - +b.date);
   }
 
   @Post('door/open')
