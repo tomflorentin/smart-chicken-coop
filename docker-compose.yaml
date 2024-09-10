@@ -5,12 +5,18 @@ services:
       - type: bind
         source: ./server/mosquitto/config
         target: /mosquitto/config
+        bind:
+          create_host_path: true
       - type: bind
         source: ./server/mosquitto/log
         target: /mosquitto/log
+        bind:
+          create_host_path: true
       - type: bind
         source: ./server/mosquitto/data
         target: /mosquitto/data
+        bind:
+          create_host_path: true
     ports:
       - target: 1883
         published: 1883
