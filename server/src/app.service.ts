@@ -2,14 +2,17 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { MqttService, Topic } from './mqtt/mqtt.service';
 import State, { AlertOrder, DoorOrder, FenceOrder } from './state';
 import { Task, Tasks } from './tasks';
+import { Notify } from './notify';
 
 const secondsBeforePing = 30;
+const secondsBeforeDisconnected = 60;
 
 @Injectable()
 export class AppService implements OnModuleInit {
   constructor(private readonly mqttService: MqttService) {}
 
-  onModuleInit() {
+  async onModuleInit() {
+    await Notify('🖥️ Système central démarré 🖥️');
     return this.refreshState();
   }
 
@@ -32,6 +35,18 @@ export class AppService implements OnModuleInit {
       nowMs - +State.enclos.lastSeen > secondsBeforePing * 1000
     ) {
       this.mqttService.publish(Topic.enclosPing, 'ping');
+    }
+    if (
+      State.enclos.lastSeen &&
+      nowMs - +State.enclos.lastSeen > secondsBeforeDisconnected * 1000
+    ) {
+      await Notify('💔 Enclos déconnecté 💔');
+    }
+    if (
+      State.poulailler.lastSeen &&
+      nowMs - +State.poulailler.lastSeen > secondsBeforeDisconnected * 1000
+    ) {
+      await Notify('💔 Poulailler déconnecté 💔');
     }
 
     // Statuses

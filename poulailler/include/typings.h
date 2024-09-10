@@ -7,7 +7,6 @@
 
 #include <cstdint>
 
-
 enum DoorStatus {
     OPENED = 1,
     CLOSED = 2,
@@ -15,6 +14,7 @@ enum DoorStatus {
     OPENING = 4,
     FORCE_CLOSING = 5,
 };
+
 
 enum LastOrderStatus {
     NO_LAST_ORDER = 0,
@@ -30,6 +30,8 @@ enum Order : uint8_t {
     SAFE_CLOSE_DOOR = 1,
     OPEN_DOOR = 2,
     FORCE_CLOSE_DOOR = 3,
+    STATUS_DOOR = 4,
+    PING = 5,
 };
 
 struct Infos {

@@ -1,3 +1,4 @@
+require('dotenv').config();
 import { Logger } from '@nestjs/common';
 import * as process from 'process';
 
@@ -9,7 +10,7 @@ if (!PUSHOVER_TOKEN?.length || !PUSHOVER_USER?.length) {
   throw new Error('Missing Pushover token or user');
 }
 
-export async function notify(message: string): Promise<boolean> {
+export async function Notify(message: string): Promise<boolean> {
   Logger.log('Sending notification ' + message);
 
   const body = {

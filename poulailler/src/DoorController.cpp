@@ -6,9 +6,10 @@
 #define STEPS_TIME 1000
 #define CONFIRM_TIME 500
 
-DoorController::DoorController(uint8_t motorPin1, uint8_t motorPin2, uint8_t closedLimitSwitchPin,
+DoorController::DoorController(MQTTServer &_server, uint8_t motorPin1, uint8_t motorPin2, uint8_t closedLimitSwitchPin,
                                uint8_t openedLimitSwitchPin, uint8_t laserEmitPin, uint8_t laserReceivePin)
-                               : laserSafety(laserEmitPin, laserReceivePin),
+                               : server(_server),
+                               laserSafety(laserEmitPin, laserReceivePin),
                                closedLimitSwitch(closedLimitSwitchPin, true, true),
                                openedLimitSwitch(openedLimitSwitchPin, true, false),
                                motor(motorPin1, motorPin2)
@@ -27,17 +28,18 @@ void DoorController::setup() {
         status = DoorStatus::OPENED;
     } else {
         this->status = DoorStatus::FORCE_CLOSING;
+        this->motor.forward(255);
     }
 }
 
 void DoorController::work() {
     if (status == DoorStatus::OPENING) {
         if (openedLimitSwitch.read()) {
-            finalizeOrder(openedLimitSwitch, DoorStatus::OPENED, "ouverte");
+            finalizeOrder(openedLimitSwitch, DoorStatus::OPENED, "opened");
         }
     } else if (status == DoorStatus::SAFE_CLOSING) {
         if (closedLimitSwitch.read()) {
-            finalizeOrder(closedLimitSwitch, DoorStatus::CLOSED, "fermée (avec laser)");
+            finalizeOrder(closedLimitSwitch, DoorStatus::CLOSED, "closed");
         } else if (millis() - stepStartedTime >= STEPS_TIME) {
             this->motor.standby();
             if (this->laserSafety.makeInitialPicks()) {
@@ -52,7 +54,7 @@ void DoorController::work() {
         }
     } else if (status == DoorStatus::FORCE_CLOSING) {
         if (closedLimitSwitch.read()) {
-            finalizeOrder(closedLimitSwitch, DoorStatus::CLOSED, "fermée (de force)");
+            finalizeOrder(closedLimitSwitch, DoorStatus::CLOSED, "closed");
         }
     }
 }
@@ -72,6 +74,7 @@ void DoorController::executeOrder(Order order) {
                 this->lastOrderStatus = LastOrderStatus::IN_PROGRESS;
                 this->motor.backward(255);
             }
+            this->server.publish("poulailler/door/info", DoorController::doorStatusToString(this->status).c_str());
             break;
         case Order::SAFE_CLOSE_DOOR:
             Log("Closing door");
@@ -85,6 +88,7 @@ void DoorController::executeOrder(Order order) {
                 this->stepStartedTime = millis();
                 motor.forward(255);
             }
+            this->server.publish("poulailler/door/info", DoorController::doorStatusToString(this->status).c_str());
             break;
         case Order::FORCE_CLOSE_DOOR:
             Log("Force closing door");
@@ -95,7 +99,10 @@ void DoorController::executeOrder(Order order) {
                 lastOrderStatus = LastOrderStatus::IN_PROGRESS;
                 motor.forward(255);
             }
+            this->server.publish("poulailler/door/info", DoorController::doorStatusToString(this->status).c_str());
             break;
+        case Order::STATUS_DOOR:
+            this->server.publish("poulailler/door/info", DoorController::doorStatusToString(this->status).c_str());
         default:
             break;
     }
@@ -123,9 +130,26 @@ void DoorController::finalizeOrder(const DigitalPinReader & endPin, DoorStatus _
     unsigned int endMillis = millis();
     unsigned int time = endMillis - this->orderStartTime;
     Log("Order finished in " + String((float)time/1000.f) + "s");
-    Notify("Porte " + statusStr + " en " + String((float)time/1000.f) + "s");
+    this->server.publish("poulailler/door/info", (statusStr + " " + String((float)time/1000.f)).c_str());
     this->status = _doorStatus;
     if (lastOrderStatus != LastOrderStatus::NO_LAST_ORDER) {
         lastOrderStatus = LastOrderStatus::DONE;
+    }
+}
+
+String DoorController::doorStatusToString(DoorStatus status) {
+    switch (status) {
+        case DoorStatus::OPENED:
+            return "opened";
+        case DoorStatus::CLOSED:
+            return "closed";
+        case DoorStatus::SAFE_CLOSING:
+            return "safe_closing";
+        case DoorStatus::OPENING:
+            return "opening";
+        case DoorStatus::FORCE_CLOSING:
+            return "force_closing";
+        default:
+            return "unknown";
     }
 }

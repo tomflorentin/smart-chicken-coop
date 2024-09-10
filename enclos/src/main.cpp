@@ -12,51 +12,28 @@ void setup() {
     server.setup();
     alertSystem.setup();
     electricFence.setup();
-    Notify("Enclos démarré");
-//    server.publish("enclos/fence", "started");
+    server.publish("enclos/boot", "booted");
     alertSystem.enable();
 }
 
-unsigned long lastTime = 0;
-bool lastState = false;
-
-void loop(){
+void loop() {
     server.work();
     alertSystem.work();
     electricFence.work();
-    const unsigned long currentTime = millis();
-    if (currentTime - lastTime > 1000) {
-        Log("1 second passed");
-        lastTime = currentTime;
-        if (lastState) {
-            Log("Enable electric fence");
-            electricFence.enable();
-        } else {
-            Log("Disable electric fence");
-            electricFence.disable();
-        }
-        lastState = !lastState;
-    }
 
-//    Order action = server.getAction();
-//    if (action != Order::NONE)
-//        Log("Action received");
-//    if (action == Order::ENABLE_ALERT)
-//        alertSystem.enable();
-//    if (action == Order::DISABLE_ALERT)
-//        alertSystem.disable();
-//    if (action == Order::ENABLE_ELECTRIC_FENCE)
-//        electricFence.enable();
-//    if (action == Order::DISABLE_ELECTRIC_FENCE)
-//        electricFence.disable();
+    Order action = server.getAction();
+    bool handledAction = true;
+    if (action == Order::ENABLE_ALERT)
+        alertSystem.enable();
+    else if (action == Order::DISABLE_ALERT)
+        alertSystem.disable();
+    else if (action == Order::ENABLE_ELECTRIC_FENCE)
+        electricFence.enable();
+    else if (action == Order::DISABLE_ELECTRIC_FENCE)
+        electricFence.disable();
+    else
+        handledAction = false;
 
-//     Build the infos
-//    Infos infos;
-//    infos.doorIsOpen = door.getStatus() == DoorStatus::OPENED;
-//    infos.doorIsClosed = door.getStatus() == DoorStatus::CLOSED;
-//    infos.isDoorMoving = door.getStatus() == DoorStatus::OPENING || door.getStatus() == DoorStatus::SAFE_CLOSING || door.getStatus() == DoorStatus::FORCE_CLOSING;
-//    infos.isDoorBlocked = door.getLastOrderStatus() == LastOrderStatus::ERROR_BLOCKED;
-//    infos.lastOrderStatus = door.getLastOrderStatus();
-
-//    server.setInfos(infos);
+    if (handledAction)
+        Log("Action received " + String(action));
 }

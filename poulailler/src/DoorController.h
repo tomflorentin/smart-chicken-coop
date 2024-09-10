@@ -12,13 +12,14 @@
 #include "WebServer.h"
 #include "L298Controller.hpp"
 #include "typings.h"
+#include "MQTTServer.h"
 
 
 const int UNLOCKING_TIME = 5000;
 
 class DoorController : public ISetupable {
 public:
-    DoorController(uint8_t motorPin1, uint8_t motorPin2, uint8_t closedLimitSwitchPin, uint8_t openedLimitSwitchPin, uint8_t laserEmitPin, uint8_t laserReceivePin);
+    DoorController(MQTTServer &_server, uint8_t motorPin1, uint8_t motorPin2, uint8_t closedLimitSwitchPin, uint8_t openedLimitSwitchPin, uint8_t laserEmitPin, uint8_t laserReceivePin);
 
     void setup() override;
     void work();
@@ -35,8 +36,10 @@ private:
     L298Controller motor;
     unsigned int orderStartTime = 0;
     unsigned int stepStartedTime = 0;
+    MQTTServer &server;
 
     void finalizeOrder(const DigitalPinReader & pin, DoorStatus _status, const String & str);
+    static String doorStatusToString(DoorStatus status);
 };
 
 

@@ -30,7 +30,6 @@ void AlertSystem::work() {
         } else {
             isBooted = true;
             this->server.publish("enclos/alert/info", "booted");
-            Notify("Système d'alerte initialisé");
         }
     }
 
@@ -41,11 +40,9 @@ void AlertSystem::work() {
         this->lightPin.write(true);
         if (pin1State) {
             this->server.publish("enclos/alert/info", "alert 1");
-            Notify("Détection sur détecteur 1");
         }
         if (pin2State) {
             this->server.publish("enclos/alert/info", "alert 2");
-            Notify("Detection sur détecteur 2");
         }
         this->numberOfDetections++;
         this->alertLastDetectedTime = currentTime;
@@ -61,7 +58,7 @@ void AlertSystem::work() {
         this->numberOfDetections = 0;
         this->alertStartedTime = 0;
         this->lightPin.write(false);
-        Notify("Alerte terminée");
+        this->server.publish("enclos/alert/info", "enabled");
     }
 }
 
@@ -80,9 +77,11 @@ bool AlertSystem::isInAlert() const {
 
 void AlertSystem::enable() {
     this->enabled = true;
+    this->server.publish("enclos/alert/info", "enabled");
 }
 
 void AlertSystem::disable() {
     this->enabled = false;
+    this->server.publish("enclos/alert/info", "disabled");
 }
 

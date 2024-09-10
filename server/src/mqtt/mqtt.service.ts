@@ -8,13 +8,18 @@ import {
   Tasks,
 } from '../tasks';
 import { Logs } from '../logs';
+import { Notify } from '../notify';
 
 export enum Topic {
   poulaillerPing = 'poulailler/ping',
+  poulaillerPong = 'poulailler/pong',
+  poulaillerBoot = 'poulailler/boot',
   poulaillerDoor = 'poulailler/door',
   poulaillerDoorOrder = 'poulailler/door/order',
   poulaillerDoorInfo = 'poulailler/door/info',
   enclosPing = 'enclos/ping',
+  enclosPong = 'enclos/pong',
+  enclosBoot = 'enclos/boot',
   enclosFence = 'enclos/fence',
   enclosFenceOrder = 'enclos/fence/order',
   enclosFenceInfo = 'enclos/fence/info',
@@ -43,9 +48,44 @@ export class MqttService implements OnModuleInit {
       name: Topic.enclosFenceInfo,
       handler: this.handleEnclosFence.bind(this),
     },
+    {
+      name: Topic.poulaillerPong,
+      handler: () => {
+        Logger.log('Poulailler pong received');
+        State.poulailler.lastSeen = new Date();
+      },
+    },
+    {
+      name: Topic.enclosPong,
+      handler: () => {
+        Logger.log('Enclos pong received');
+        State.enclos.lastSeen = new Date();
+      },
+    },
+    {
+      name: Topic.enclosBoot,
+      handler: async () => {
+        Logger.log('Enclos boot received');
+        State.enclos.lastSeen = new Date();
+        State.enclos.bootTime = new Date();
+        this.publish(Topic.enclosFenceOrder, 'status');
+        this.publish(Topic.enclosAlertOrder, 'status');
+        await Notify('🧱 Enclos démarré 🧱');
+      },
+    },
+    {
+      name: Topic.poulaillerBoot,
+      handler: async () => {
+        Logger.log('Poulailler boot received');
+        State.poulailler.lastSeen = new Date();
+        State.poulailler.bootTime = new Date();
+        this.publish(Topic.poulaillerDoorOrder, 'status');
+        await Notify('🏠 Poulailler démarré 🏠');
+      },
+    },
   ];
 
-  private handlePoulaillerDoor(message: string) {
+  private async handlePoulaillerDoor(message: string) {
     console.log('door', message);
     State.poulailler.lastSeen = new Date();
     State.poulailler.door.status = message as DoorStatus;
@@ -54,9 +94,18 @@ export class MqttService implements OnModuleInit {
     } else {
       addIntermediateStatusToTasksWithTopic(Topic.poulaillerDoor, message);
     }
+    if (message === 'opened') {
+      await Notify('🚪 Porte ouverte 🚪');
+    }
+    if (message === 'closed') {
+      await Notify('🚪 Porte fermée 🚪');
+    }
+    if (message === DoorStatus.ABORTED) {
+      await Notify('🚪 Obstable détécté, abandon de la fermeture 🚪');
+    }
   }
 
-  private handleEnclosAlert(message: string) {
+  private async handleEnclosAlert(message: string) {
     console.log('alert', message);
     State.enclos.lastSeen = new Date();
     State.enclos.alertSystem.status = message as AlertStatus;
@@ -64,15 +113,27 @@ export class MqttService implements OnModuleInit {
     if (message === 'enabled' || message === 'disabled') {
       concludeTasksWithTopic(Topic.enclosAlert, message);
     }
+    if (message === 'enabled') {
+      await Notify('🛡️ Détécteurs de mouvements activés 🛡️');
+    }
+    if (message === 'disabled') {
+      await Notify('🛡️ Détécteurs de mouvements désactivés 🛡️');
+    }
   }
 
-  private handleEnclosFence(message: string) {
+  private async handleEnclosFence(message: string) {
     console.log('fence', message);
     State.enclos.lastSeen = new Date();
     State.enclos.electricFence.status = message as FenceStatus;
 
     if (message === 'enabled' || message === 'disabled') {
       concludeTasksWithTopic(Topic.enclosFence, message);
+    }
+    if (message === 'enabled') {
+      await Notify('⚡ Clôture électrique activée ⚡');
+    }
+    if (message === 'disabled') {
+      await Notify('⚡ Clôture électrique désactivée ⚡');
     }
   }
 

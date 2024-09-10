@@ -6,10 +6,11 @@
 #include "MQTTServer.h"
 #include "credentials.h"
 #include "func.h"
+#include "typings.h"
 
 const char* mqtt_ssid = WIFI_SSID;
 const char* mqtt_password = WIFI_PASSWORD;
-char const * topics[] = {"enclos/fence/order", "enclos/alert/order", nullptr};
+char const * topics[] = {"poulailler/door/order", "poulailler/ping", nullptr};
 
 
 
@@ -49,24 +50,28 @@ void MQTTServer::handleCallback(char *topic, byte *payload, unsigned int length)
     }
     Log("Message arrived [" + String(topic) + "] : " + message);
 
-    if (!strcmp(topic, "enclos/fence/order")) {
-        if (!strcmp(message.c_str(), "enable")) {
-            lastOrder = Order::ENABLE_ELECTRIC_FENCE;
-        } else if (!strcmp(message.c_str(), "disable")) {
-            lastOrder = Order::DISABLE_ELECTRIC_FENCE;
+    if (!strcmp(topic, "poulailler/door/order")) {
+        if (!strcmp(message.c_str(), "open")) {
+            lastOrder = Order::OPEN_DOOR;
+        } else if (!strcmp(message.c_str(), "force_close")) {
+            lastOrder = Order::FORCE_CLOSE_DOOR;
+        } else if (!strcmp(message.c_str(), "safe_close")) {
+            lastOrder = Order::SAFE_CLOSE_DOOR;
+        } else if (!strcmp(message.c_str(), "status")) {
+            lastOrder = Order::STATUS_DOOR;
+        } else {
+            this->publish("enclos/fence/info", "bad request");
         }
-    }
-    if (!strcmp(topic, "enclos/alert/order")) {
-        if (!strcmp(message.c_str(), "enable")) {
-            lastOrder = Order::ENABLE_ALERT;
-        } else if (!strcmp(message.c_str(), "disable")) {
-            lastOrder = Order::DISABLE_ALERT;
-        }
+    } else if (!strcmp(topic, "poulailler/ping")) {
+        this->publish("poulailler/pong", "pong");
+    } else {
+        Log("Unknown topic " + String(topic) + " with message " + message);
     }
 }
 
 void MQTTServer::publish(const char *topic, const char *message) {
-    client.publish(topic, message);
+    bool res = client.publish(topic, message);
+    Log("Publishing to [" + String(topic) + "] : " + message + " : " + (res ? "success" : "failed"));
 }
 
 void MQTTServer::work() {

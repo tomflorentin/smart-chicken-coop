@@ -9,7 +9,7 @@
 
 const char* mqtt_ssid = WIFI_SSID;
 const char* mqtt_password = WIFI_PASSWORD;
-char const * topics[] = {"enclos/fence", "enclos/alert", nullptr};
+char const * topics[] = {"enclos/ping", "enclos/fence/order", "enclos/alert/order", nullptr};
 
 
 
@@ -47,7 +47,35 @@ void MQTTServer::handleCallback(char *topic, byte *payload, unsigned int length)
     for (int i = 0; i < length; i++) {
         message += (char)payload[i];
     }
-    Notify("Message arrived [" + String(topic) + "] : " + message);
+    Log("Message arrived [" + String(topic) + "] : " + message);
+
+    if (!strcmp(topic, "enclos/fence/order")) {
+        if (!strcmp(message.c_str(), "enable")) {
+            lastOrder = Order::ENABLE_ELECTRIC_FENCE;
+        } else if (!strcmp(message.c_str(), "disable")) {
+            lastOrder = Order::DISABLE_ELECTRIC_FENCE;
+        } else if (!strcmp(message.c_str(), "status")) {
+            lastOrder = Order::STATUS_ELECTRIC_FENCE;
+        }
+        else {
+            this->publish("enclos/fence/info", "bad request");
+        }
+    }
+    else if (!strcmp(topic, "enclos/alert/order")) {
+        if (!strcmp(message.c_str(), "enable")) {
+            lastOrder = Order::ENABLE_ALERT;
+        } else if (!strcmp(message.c_str(), "disable")) {
+            lastOrder = Order::DISABLE_ALERT;
+        } else if (!strcmp(message.c_str(), "status")) {
+            lastOrder = Order::STATUS_ALERT;
+        } else {
+            this->publish("enclos/alert/info", "bad request");
+        }
+    } else if (!strcmp(topic, "enclos/ping")) {
+        this->publish("enclos/pong", "pong");
+    } else {
+        Log("Unknown topic " + String(topic) + " with message " + message);
+    }
 }
 
 void MQTTServer::publish(const char *topic, const char *message) {
@@ -56,4 +84,10 @@ void MQTTServer::publish(const char *topic, const char *message) {
 
 void MQTTServer::work() {
     client.loop();
+}
+
+Order MQTTServer::getAction() {
+    Order order = lastOrder;
+    lastOrder = Order::NONE;
+    return order;
 }

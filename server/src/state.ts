@@ -5,15 +5,15 @@ export enum FenceOrder {
 }
 
 export enum AlertOrder {
-  ENABLE = 'alert_enable',
-  DISABLE = 'alert_disable',
+  ENABLE = 'enable',
+  DISABLE = 'disable',
   STATUS = 'status',
 }
 
 export enum DoorOrder {
-  SAFE_CLOSE = 'door_safe_close',
-  FORCE_CLOSE = 'door_force_close',
-  OPEN = 'door_open',
+  SAFE_CLOSE = 'safe_close',
+  FORCE_CLOSE = 'force_close',
+  OPEN = 'open',
   STATUS = 'status',
 }
 
@@ -23,6 +23,8 @@ export enum DoorStatus {
   OPENING = 'opening',
   FORCE_CLOSING = 'force_closing',
   SAFE_CLOSING = 'safe_closing',
+  OBSTRUCTED = 'safe_closing_obstructed',
+  ABORTED = 'safe_closing_aborted',
 }
 
 export enum FenceStatus {
@@ -38,6 +40,7 @@ export enum AlertStatus {
 
 export interface StateType {
   enclos: {
+    bootTime: Date;
     lastSeen: Date;
     electricFence: {
       lastOrder: FenceOrder;
@@ -53,6 +56,7 @@ export interface StateType {
     };
   };
   poulailler: {
+    bootTime: Date;
     lastSeen: Date;
     door: {
       lastOrder: DoorOrder;
@@ -65,6 +69,7 @@ export interface StateType {
 const State: StateType = {
   enclos: {
     lastSeen: null,
+    bootTime: null,
     electricFence: {
       lastOrder: null,
       lastOrderDate: null,
@@ -79,6 +84,7 @@ const State: StateType = {
     },
   },
   poulailler: {
+    bootTime: null,
     lastSeen: null,
     door: {
       lastOrder: null,

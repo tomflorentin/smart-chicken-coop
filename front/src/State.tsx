@@ -45,6 +45,7 @@ export enum AlertStatus {
 export interface ChickenCoopStateType {
     enclos: {
         lastSeen: Date;
+        bootTime: Date;
         electricFence: {
             lastOrder: FenceOrder;
             lastOrderDate: Date;
@@ -59,6 +60,7 @@ export interface ChickenCoopStateType {
         };
     };
     poulailler: {
+        bootTime: Date;
         lastSeen: Date;
         door: {
             lastOrder: DoorOrder;
@@ -70,7 +72,9 @@ export interface ChickenCoopStateType {
 
 const ChickenCoop: React.FC<{ state: ChickenCoopStateType | null }> = ({ state }) => {
     const isDoorMoving = (status: DoorStatus | null) => {
-        return status?.startsWith('opening') || status?.startsWith('closing');
+        return status?.startsWith('opening') ||
+            status?.startsWith('force_closing') ||
+            status?.startsWith('safe_closing');
     };
 
     const getDoorBadge = (status: DoorStatus | null) => {
@@ -79,11 +83,13 @@ const ChickenCoop: React.FC<{ state: ChickenCoopStateType | null }> = ({ state }
             case status.startsWith('opened'):
                 return <Badge value="Ouverte" severity="success" />;
             case status.startsWith('closed'):
-                return <Badge value="Fermée" severity="info" />;
+                return <Badge value="Fermée" severity="danger" />;
             case status.startsWith('opening'):
                 return <Badge value="Ouverture" severity="info" />;
-            case status.startsWith('closing'):
-                return <Badge value="Fermeture" severity="info" />;
+            case status.startsWith('safe_closing'):
+                return <Badge value="Fermeture avec laser" severity="info" />;
+            case status.startsWith('force_closing'):
+                return <Badge value="Fermeture forcée" severity="info" />;
             default:
                 return <Badge value="Inconnu" severity="warning" />;
         }
@@ -116,14 +122,29 @@ const ChickenCoop: React.FC<{ state: ChickenCoopStateType | null }> = ({ state }
     };
 
     const getConnectionStatus = (lastSeen: Date | null) => {
-        if (!lastSeen) return { status: 'Hors ligne', severity: 'danger' };
+        if (!lastSeen) return { status: 'Hors ligne', severity: 'danger', duration: null };
         const now = new Date();
-        const diff = (now.getTime() - new Date(lastSeen).getTime()) / 1000 / 60; // in minutes
-        return diff > 2 ? { status: 'Hors ligne', severity: 'danger' } : { status: 'En ligne', severity: 'success' };
+        const diffInMs = now.getTime() - new Date(lastSeen).getTime();
+        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+        const hours = Math.floor(diffInMinutes / 60);
+        const minutes = diffInMinutes % 60;
+        const duration = `${hours}h ${minutes}m`;
+        return diffInMinutes > 2
+            ? { status: 'Hors ligne', severity: 'danger', duration }
+            : { status: 'En ligne', severity: 'success', duration };
     };
 
     const formatLastSeen = (date: Date | null) => {
         return date ? new Date(date).toLocaleTimeString() : 'Inconnu';
+    };
+
+    const formatBootTime = (bootTime: Date) => {
+        const now = new Date();
+        const diffInMs = now.getTime() - new Date(bootTime).getTime();
+        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+        const hours = Math.floor(diffInMinutes / 60);
+        const minutes = diffInMinutes % 60;
+        return `${hours}h ${minutes}m`;
     };
 
     if (!state?.enclos || !state?.poulailler) {
@@ -136,10 +157,10 @@ const ChickenCoop: React.FC<{ state: ChickenCoopStateType | null }> = ({ state }
     return (
         <div className="p-d-flex p-flex-column p-jc-center p-ai-center" style={{ padding: '1rem', overflowX: 'hidden', width: '100%' }}>
             {/* Section Poulailler */}
-            <Card title="Poulailler" className="p-mb-3" style={{ width: '100%', maxWidth: '100%' }}>
+            <Card header="Poulailler" className="p-mb-3" style={{marginBottom: 16}}>
                 <p>
                     <i className={`pi ${doorConnection.severity === 'danger' ? 'pi-times-circle' : 'pi-check-circle'} p-mr-2`} style={{ color: doorConnection.severity === 'danger' ? 'red' : 'green' }} />
-                    {doorConnection.status}
+                    {doorConnection.status} {doorConnection.duration ? `depuis ${doorConnection.duration}` : ''}
                 </p>
                 <p>
                     <i className="pi pi-door p-mr-2" />
@@ -155,10 +176,10 @@ const ChickenCoop: React.FC<{ state: ChickenCoopStateType | null }> = ({ state }
             </Card>
 
             {/* Section Enclos */}
-            <Card title="Enclos" className="p-mb-3" style={{ width: '100%', maxWidth: '100%' }}>
+            <Card header="Enclos" className="p-mb-3">
                 <p>
                     <i className={`pi ${fenceConnection.severity === 'danger' ? 'pi-times-circle' : 'pi-check-circle'} p-mr-2`} style={{ color: fenceConnection.severity === 'danger' ? 'red' : 'green' }} />
-                    {fenceConnection.status}
+                    {fenceConnection.status} {fenceConnection.duration ? `depuis ${fenceConnection.duration}` : ''}
                 </p>
                 <p>
                     <i className="pi pi-bolt p-mr-2" />

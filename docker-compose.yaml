@@ -3,13 +3,13 @@ services:
     image: eclipse-mosquitto:2
     volumes:
       - type: bind
-        source: ./mosquitto/config
+        source: ./server/mosquitto/config
         target: /mosquitto/config
       - type: bind
-        source: ./mosquitto/log
+        source: ./server/mosquitto/log
         target: /mosquitto/log
       - type: bind
-        source: ./mosquitto/data
+        source: ./server/mosquitto/data
         target: /mosquitto/data
     ports:
       - target: 1883
@@ -22,9 +22,9 @@ services:
         mode: host
   nestjs:
     env_file:
-      - .env
+      - ./server/.env
     build:
-        context: .
+        context: ./server
         dockerfile: Dockerfile
     environment:
       NODE_ENV: "production"
@@ -33,3 +33,10 @@ services:
       MOSQUITTO_PORT: "1883"
     ports:
       - "3001:3001"
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    ports:
+      - target: 80
+        published: 3000

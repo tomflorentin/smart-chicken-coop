@@ -29,16 +29,12 @@ enum Order : uint8_t {
     NONE = 0,
     ENABLE_ALERT = 1,
     DISABLE_ALERT = 2,
-    ENABLE_ELECTRIC_FENCE = 3,
-    DISABLE_ELECTRIC_FENCE = 4,
+    STATUS_ALERT = 3,
+    ENABLE_ELECTRIC_FENCE = 4,
+    DISABLE_ELECTRIC_FENCE = 5,
+    STATUS_ELECTRIC_FENCE = 6,
+    PING = 7,
 };
 
-struct Infos {
-    bool doorIsOpen;
-    bool doorIsClosed;
-    bool isDoorMoving;
-    bool isDoorBlocked;
-    LastOrderStatus lastOrderStatus;
-};
 
 #endif //POULAILLER_TYPINGS_H
