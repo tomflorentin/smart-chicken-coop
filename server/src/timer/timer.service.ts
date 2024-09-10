@@ -96,10 +96,12 @@ export class TimerService implements OnModuleInit {
   }
 
   async checkTimers() {
+    Logger.log('Checking timers');
     if (!this.closeTime || !this.openTime) {
       await this.loadTimers();
       return;
     }
+    Logger.log('Timers loaded');
     const currentFractionOfDay = this.getCurrentFractionOfDay();
 
     const isAfternoon = currentFractionOfDay > 0.5;

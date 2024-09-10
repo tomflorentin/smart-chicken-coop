@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MqttService, Topic } from './mqtt/mqtt.service';
 import State, { AlertOrder, DoorOrder, FenceOrder } from './state';
 import { Task, Tasks } from './tasks';
@@ -21,17 +21,18 @@ export class AppService implements OnModuleInit {
   }
 
   async refreshState() {
+    Logger.log('Refreshing state...');
     const nowMs = +new Date();
 
     // Pings
     if (
-      State.poulailler.lastSeen &&
+      !State.poulailler.lastSeen &&
       nowMs - +State.poulailler.lastSeen > secondsBeforePing * 1000
     ) {
       this.mqttService.publish(Topic.poulaillerPing, 'ping');
     }
     if (
-      State.enclos.lastSeen &&
+      !State.enclos.lastSeen &&
       nowMs - +State.enclos.lastSeen > secondsBeforePing * 1000
     ) {
       this.mqttService.publish(Topic.enclosPing, 'ping');
