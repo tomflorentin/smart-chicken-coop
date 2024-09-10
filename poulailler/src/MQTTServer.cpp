@@ -21,7 +21,7 @@ void MQTTServer::setup() {
         Serial.println("Connecting to WiFi..");
     } Serial.println("Connected to the Wi-Fi network");
     //connexion au broker MQTT
-    client.setServer("192.168.1.21", 1883);
+    client.setServer("192.168.1.111", 1883);
     client.setCallback([this](char* topic, byte* payload, unsigned int length) {
         this->handleCallback(topic, payload, length);
     });

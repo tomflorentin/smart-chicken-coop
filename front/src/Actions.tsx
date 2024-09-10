@@ -21,7 +21,7 @@ const Actions: React.FC<ActionProps> = ({ orderSent }) => {
 
     const handleAction = async (endpoint: string) => {
         try {
-            await fetch(`http://localhost:3001/${endpoint}`, { method: 'POST', headers: {Authorization: getAuthentication()} });
+            await fetch(`http://192.168.1.111:3001/${endpoint}`, { method: 'POST', headers: {Authorization: getAuthentication()} });
             orderSent();
         } catch (error) {
             console.error('Erreur lors de l\'exécution de l\'action:', error);

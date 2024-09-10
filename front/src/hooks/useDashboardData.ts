@@ -16,7 +16,7 @@ interface Log {
     date: string;
 }
 
-const endpoint = 'http://localhost:3001';
+const endpoint = 'http://192.168.1.111:3001/';
 
 const useDashboardData = () => {
     const [state, setState] = useState<State>({});
