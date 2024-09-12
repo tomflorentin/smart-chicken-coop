@@ -29,13 +29,13 @@ export class AppService implements OnModuleInit {
 
     // Pings
     if (
-      !State.poulailler.lastSeen &&
+      !State.poulailler.lastSeen ||
       nowMs - +State.poulailler.lastSeen > secondsBeforePing * 1000
     ) {
       await this.mqttService.publish(Topic.poulaillerPing, 'ping');
     }
     if (
-      !State.enclos.lastSeen &&
+      !State.enclos.lastSeen ||
       nowMs - +State.enclos.lastSeen > secondsBeforePing * 1000
     ) {
       await this.mqttService.publish(Topic.enclosPing, 'ping');
@@ -46,9 +46,9 @@ export class AppService implements OnModuleInit {
       nowMs - +State.enclos.lastSeen > secondsBeforeDisconnected * 1000
     ) {
       Logger.log(
-        `Enclos disconnected : last notif ${this.poulaillerDisconnectNotified}`,
+        `Enclos disconnected : last notif ${this.enclosDisconnectNotified}`,
       );
-      this.poulaillerDisconnectNotified = new Date();
+      this.enclosDisconnectNotified = new Date();
       await Notify('💔 Enclos déconnecté');
     }
     if (

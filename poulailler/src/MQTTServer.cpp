@@ -59,6 +59,7 @@ void MQTTServer::work() {
     unsigned long now = millis();
     if (now - this->lastConnectionCheck > 10000) {
         this->lastConnectionCheck = now;
+        this->connect();
     }
     client.loop();
 }
