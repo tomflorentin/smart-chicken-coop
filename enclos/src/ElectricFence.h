@@ -21,6 +21,7 @@ public:
     void work();
     void enable();
     void disable();
+    String getStatusStr() const;
 
 private:
     MQTTServer &server;

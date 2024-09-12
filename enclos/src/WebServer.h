@@ -20,13 +20,11 @@ public:
     void work();
 
     Order getAction();
-    void setInfos(Infos const & infos);
     void reconnect();
 
 private:
     Order action;
     WiFiServer server;
-    Infos infos;
 
     String readRequest(WiFiClient &client);
     String handleRequest(String const &request);

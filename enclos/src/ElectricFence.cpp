@@ -50,3 +50,7 @@ void ElectricFence::disable() {
     this->relay.write(false);
     this->server.publish("enclos/fence/info", "disabled");
 }
+
+String ElectricFence::getStatusStr() const {
+    return this->enabled ? "enabled" : "disabled";
+}

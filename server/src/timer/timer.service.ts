@@ -1,9 +1,14 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import * as fs from 'fs';
 import xlsx from 'node-xlsx';
 import { Notify } from '../notify';
 import { MqttService, Topic } from '../mqtt/mqtt.service';
-import State, { DoorOrder, DoorStatus } from '../state';
+import State, {
+  AlertStatus,
+  DoorOrder,
+  DoorStatus,
+  FenceOrder,
+  FenceStatus,
+} from '../state';
 import { ConfigService } from '@nestjs/config';
 
 const tenMinutesAsFractionOfDay = 10 / (24 * 60);
@@ -83,9 +88,11 @@ export class TimerService implements OnModuleInit {
         new Date(new Date().getTime() + 24 * 60 * 60 * 1000),
       );
       const currentDay = timetable.find((day) => day.day === today);
-      const tomorowDay = timetable.find((day) => day.day === tomorow);
+      const tomorrowDay = timetable.find((day) => day.day === tomorow);
+      this.openTime = tomorrowDay.open;
+      this.closeTime = currentDay.close;
       await Notify(
-        `🕖 Ce soir la porte se fermera à ${this.fractionOfDayHHMM(currentDay.close)}, et s'ouvrira demain à ${this.fractionOfDayHHMM(tomorowDay.open)} 🕖`,
+        `🕖 Ce soir la porte se fermera à ${this.fractionOfDayHHMM(currentDay.close)}, et s'ouvrira demain à ${this.fractionOfDayHHMM(tomorrowDay.open)} 🕖`,
       );
     } catch (e) {
       Logger.error('Error while reading timetable', e);
@@ -96,45 +103,82 @@ export class TimerService implements OnModuleInit {
   }
 
   async checkTimers() {
-    Logger.log('Checking timers');
-    if (!this.closeTime || !this.openTime) {
-      await this.loadTimers();
-      return;
-    }
-    Logger.log('Timers loaded');
-    const currentFractionOfDay = this.getCurrentFractionOfDay();
-
-    const isAfternoon = currentFractionOfDay > 0.5;
-
-    if (
-      isAfternoon &&
-      currentFractionOfDay >= this.closeTime &&
-      State.poulailler.door.status !== DoorStatus.CLOSED
-    ) {
-      await Notify('Fermeture automatique de la porte');
-      this.mqttService.publish(
-        Topic.poulaillerDoorOrder,
-        DoorOrder.FORCE_CLOSE,
-      );
-    }
-    if (
-      !isAfternoon &&
-      currentFractionOfDay >= this.openTime &&
-      State.poulailler.door.status !== DoorStatus.OPENED
-    ) {
-      if (currentFractionOfDay > 0.8 || currentFractionOfDay < 0.3) {
-        await Notify(
-          "Le système a tenté d'ouvrir la porte a une heure dangereuse ! annulation de l'ouverture",
-        );
+    try {
+      Logger.log('Checking timers');
+      if (!this.closeTime || !this.openTime) {
+        await this.loadTimers();
         return;
       }
-      await Notify('Ouverture automatique de la porte');
-      this.mqttService.publish(Topic.poulaillerDoorOrder, DoorOrder.OPEN);
+      Logger.log('Timers loaded');
+      const currentFractionOfDay = this.getCurrentFractionOfDay();
+
+      const isAfternoon = currentFractionOfDay > 0.5;
+
+      const notifs = [];
+
+      if (isAfternoon && currentFractionOfDay >= this.closeTime) {
+        if (State.poulailler.door.status !== DoorStatus.CLOSED) {
+          await this.mqttService.publish(
+            Topic.poulaillerDoorOrder,
+            DoorOrder.FORCE_CLOSE,
+          );
+          notifs.push('🚪🕙Fermeture automatique de la porte🕙🚪');
+        }
+        if (State.enclos.electricFence.status !== FenceStatus.ENABLED) {
+          await this.mqttService.publish(
+            Topic.enclosFenceOrder,
+            FenceOrder.ENABLE,
+          );
+          notifs.push(
+            '⚡🕙 Allumage automatique de la clôture électrique 🕙⚡',
+          );
+        }
+        if (State.enclos.alertSystem.status !== AlertStatus.ENABLED) {
+          await this.mqttService.publish(
+            Topic.enclosAlertOrder,
+            FenceOrder.ENABLE,
+          );
+          notifs.push(
+            '🛡️🕙 Allumage automatique des détecteurs de mouvements 🕙🛡️',
+          );
+        }
+      }
+      if (!isAfternoon && currentFractionOfDay >= this.openTime) {
+        if (State.poulailler.door.status !== DoorStatus.OPENED) {
+          if (currentFractionOfDay > 0.8 || currentFractionOfDay < 0.3) {
+            await Notify(
+              "Le système a tenté d'ouvrir la porte a une heure dangereuse ! annulation de l'ouverture",
+            );
+            return;
+          }
+          await this.mqttService.publish(
+            Topic.poulaillerDoorOrder,
+            DoorOrder.OPEN,
+          );
+          notifs.push('🚪🕙Ouverture automatique de la porte🕙🚪');
+        }
+      }
+      if (State.enclos.alertSystem.status !== AlertStatus.DISABLED) {
+        await this.mqttService.publish(
+          Topic.enclosAlertOrder,
+          FenceOrder.DISABLE,
+        );
+        notifs.push(
+          '🛡️🕙 Extinction automatique des détecteurs de mouvements 🕙🛡️',
+        );
+      }
+
+      if (notifs.length) {
+        await Notify(notifs.join('\n'));
+      }
+    } catch (ex) {
+      Logger.error('Error while checking timers', ex);
+      await Notify('⚠️ !!! Erreur de la tache de preparation a la nuit !!! ⚠️');
     }
   }
 
   async safetyCheck() {
-    this.mqttService.publish(Topic.poulaillerDoorOrder, DoorOrder.STATUS);
+    await this.mqttService.publish(Topic.poulaillerDoorOrder, DoorOrder.STATUS);
     await new Promise<void>((resolve) => setTimeout(() => resolve(), 10000));
     if (State.poulailler.door.status !== DoorStatus.CLOSED) {
       await Notify("⚠️ La porte n'est pas fermée ⚠️");
@@ -143,6 +187,9 @@ export class TimerService implements OnModuleInit {
         'Vérification du soir : La porte est correctement fermée ✅ Bonne nuit les poules 🐔',
       );
     }
-    this.mqttService.publish(Topic.poulaillerDoorOrder, DoorOrder.FORCE_CLOSE);
+    await this.mqttService.publish(
+      Topic.poulaillerDoorOrder,
+      DoorOrder.FORCE_CLOSE,
+    );
   }
 }

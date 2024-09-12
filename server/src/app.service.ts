@@ -5,7 +5,7 @@ import { Task, Tasks } from './tasks';
 import { Notify } from './notify';
 
 const secondsBeforePing = 30;
-const secondsBeforeDisconnected = 60;
+const secondsBeforeDisconnected = 120;
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -29,13 +29,13 @@ export class AppService implements OnModuleInit {
       !State.poulailler.lastSeen &&
       nowMs - +State.poulailler.lastSeen > secondsBeforePing * 1000
     ) {
-      this.mqttService.publish(Topic.poulaillerPing, 'ping');
+      await this.mqttService.publish(Topic.poulaillerPing, 'ping');
     }
     if (
       !State.enclos.lastSeen &&
       nowMs - +State.enclos.lastSeen > secondsBeforePing * 1000
     ) {
-      this.mqttService.publish(Topic.enclosPing, 'ping');
+      await this.mqttService.publish(Topic.enclosPing, 'ping');
     }
     if (
       State.enclos.lastSeen &&
@@ -52,13 +52,16 @@ export class AppService implements OnModuleInit {
 
     // Statuses
     if (!State.poulailler.door.status) {
-      this.mqttService.publish(Topic.poulaillerDoorOrder, DoorOrder.STATUS);
+      await this.mqttService.publish(
+        Topic.poulaillerDoorOrder,
+        DoorOrder.STATUS,
+      );
     }
     if (!State.enclos.electricFence.status) {
-      this.mqttService.publish(Topic.enclosFenceOrder, FenceOrder.STATUS);
+      await this.mqttService.publish(Topic.enclosFenceOrder, FenceOrder.STATUS);
     }
     if (!State.enclos.alertSystem.status) {
-      this.mqttService.publish(Topic.enclosAlertOrder, AlertOrder.STATUS);
+      await this.mqttService.publish(Topic.enclosAlertOrder, AlertOrder.STATUS);
     }
   }
 

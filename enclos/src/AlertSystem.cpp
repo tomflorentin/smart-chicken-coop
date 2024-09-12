@@ -85,3 +85,15 @@ void AlertSystem::disable() {
     this->server.publish("enclos/alert/info", "disabled");
 }
 
+String AlertSystem::getStatusStr() const {
+    if (this->enabled) {
+        if (this->numberOfDetections) {
+            return "alert";
+        } else {
+            return "enabled";
+        }
+    } else {
+        return "disabled";
+    }
+}
+

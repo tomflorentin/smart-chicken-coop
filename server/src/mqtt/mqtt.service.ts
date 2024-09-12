@@ -5,10 +5,10 @@ import State, { AlertStatus, DoorStatus, FenceStatus } from '../state';
 import {
   addIntermediateStatusToTasksWithTopic,
   concludeTasksWithTopic,
-  Tasks,
 } from '../tasks';
 import { Logs } from '../logs';
 import { Notify } from '../notify';
+import { sleep } from '../utils';
 
 export enum Topic {
   poulaillerPing = 'poulailler/ping',
@@ -88,6 +88,10 @@ export class MqttService implements OnModuleInit {
   private async handlePoulaillerDoor(message: string) {
     console.log('door', message);
     State.poulailler.lastSeen = new Date();
+    if (message.startsWith('status-response')) {
+      State.poulailler.door.status = message.split(' ')[1] as DoorStatus;
+      return;
+    }
     State.poulailler.door.status = message as DoorStatus;
     if (message === 'opened' || message === 'closed') {
       concludeTasksWithTopic(Topic.poulaillerDoor, message);
@@ -108,6 +112,10 @@ export class MqttService implements OnModuleInit {
   private async handleEnclosAlert(message: string) {
     console.log('alert', message);
     State.enclos.lastSeen = new Date();
+    if (message.startsWith('status-response')) {
+      State.enclos.alertSystem.status = message.split(' ')[1] as AlertStatus;
+      return;
+    }
     State.enclos.alertSystem.status = message as AlertStatus;
 
     if (message === 'enabled' || message === 'disabled') {
@@ -119,11 +127,18 @@ export class MqttService implements OnModuleInit {
     if (message === 'disabled') {
       await Notify('🛡️ Détécteurs de mouvements désactivés 🛡️');
     }
+    if (State.enclos.alertSystem.status === AlertStatus.RESTORED) {
+      State.enclos.alertSystem.status = AlertStatus.ENABLED;
+    }
   }
 
   private async handleEnclosFence(message: string) {
     console.log('fence', message);
     State.enclos.lastSeen = new Date();
+    if (message.startsWith('status-response')) {
+      State.enclos.electricFence.status = message.split(' ')[1] as FenceStatus;
+      return;
+    }
     State.enclos.electricFence.status = message as FenceStatus;
 
     if (message === 'enabled' || message === 'disabled') {
@@ -183,7 +198,9 @@ export class MqttService implements OnModuleInit {
     );
   }
 
-  publish(topic: Topic, payload: string): string {
+  private lastMessageDate: Date = new Date();
+
+  async publish(topic: Topic, payload: string): Promise<void> {
     Logs.push({
       date: new Date(),
       topic,
@@ -191,7 +208,10 @@ export class MqttService implements OnModuleInit {
       direction: 'out',
     });
     Logger.log(`Publishing to ${topic} : ${payload}`);
+    while (new Date().getTime() - this.lastMessageDate.getTime() < 100) {
+      await sleep(10);
+    }
+    this.lastMessageDate = new Date();
     this.mqttClient.publish(topic, payload);
-    return `Publishing to ${topic}`;
   }
 }

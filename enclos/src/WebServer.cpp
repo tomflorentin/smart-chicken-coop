@@ -70,24 +70,9 @@ String WebServer::readRequest(WiFiClient &client) {
     return request;
 }
 
-void WebServer::setInfos(const Infos &_infos) {
-    this->infos = _infos;
-}
 
 String WebServer::handleRequest(const String &request) {
-    if (request.indexOf("GET /infos") != -1) {
-        std::stringstream ss;
-        ss << "{";
-        ss << "\"status\": \"accepted\",";
-        ss << "\"doorIsOpen\": " << this->infos.doorIsOpen << ",";
-        ss << "\"doorIsClosed\": " << this->infos.doorIsClosed << ",";
-        ss << "\"isDoorMoving\": " << this->infos.isDoorMoving << ",";
-        ss << "\"isDoorBlocked\": " << this->infos.isDoorBlocked << ",";
-        ss << "\"lastOrderStatus\": " << this->infos.lastOrderStatus;
-        ss << "}";
-        return ss.str().c_str();
-    }
-    else if (request.indexOf("GET /logs") != -1) {
+    if (request.indexOf("GET /logs") != -1) {
         return "{ \"status\": \"accepted\", \"logs\": " + getJsonLogs() + " }";
     }
     else if (request.indexOf("GET /action/alert/enable") != -1) {

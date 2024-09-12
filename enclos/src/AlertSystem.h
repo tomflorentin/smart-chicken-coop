@@ -24,9 +24,9 @@ public:
     void work();
     void setup() override;
 
-    bool isInAlert() const;
     void enable();
     void disable();
+    String getStatusStr() const;
 
 private:
     MQTTServer &server;

@@ -36,6 +36,7 @@ export enum AlertStatus {
   ENABLED = 'enabled',
   DISABLED = 'disabled',
   ALERT = 'alert',
+  RESTORED = 'restored',
 }
 
 export interface StateType {

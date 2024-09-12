@@ -31,6 +31,10 @@ void loop() {
         electricFence.enable();
     else if (action == Order::DISABLE_ELECTRIC_FENCE)
         electricFence.disable();
+    else if (action == Order::STATUS_ALERT)
+        server.publish("enclos/alert/info", ("status-response " + alertSystem.getStatusStr()).c_str());
+    else if (action == Order::STATUS_ELECTRIC_FENCE)
+        server.publish("enclos/fence/info", ("status-response " + electricFence.getStatusStr()).c_str());
     else
         handledAction = false;
 
