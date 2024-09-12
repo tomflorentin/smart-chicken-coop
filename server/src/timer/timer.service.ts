@@ -92,7 +92,7 @@ export class TimerService implements OnModuleInit {
       this.openTime = tomorrowDay.open;
       this.closeTime = currentDay.close;
       await Notify(
-        `🕖 Ce soir la porte se fermera à ${this.fractionOfDayHHMM(currentDay.close)}, et s'ouvrira demain à ${this.fractionOfDayHHMM(tomorrowDay.open)} 🕖`,
+        `🕖 Ce soir (${currentDay.day})la porte se fermera à ${this.fractionOfDayHHMM(currentDay.close)}, et s'ouvrira demain ${tomorrowDay.day} à ${this.fractionOfDayHHMM(tomorrowDay.open)} 🕖`,
       );
     } catch (e) {
       Logger.error('Error while reading timetable', e);
@@ -122,25 +122,21 @@ export class TimerService implements OnModuleInit {
             Topic.poulaillerDoorOrder,
             DoorOrder.FORCE_CLOSE,
           );
-          notifs.push('🚪🕙Fermeture automatique de la porte🕙🚪');
+          notifs.push('🚪🕙Fermeture automatique de la porte');
         }
         if (State.enclos.electricFence.status !== FenceStatus.ENABLED) {
           await this.mqttService.publish(
             Topic.enclosFenceOrder,
             FenceOrder.ENABLE,
           );
-          notifs.push(
-            '⚡🕙 Allumage automatique de la clôture électrique 🕙⚡',
-          );
+          notifs.push('⚡🕙 Allumage automatique de la clôture électrique');
         }
         if (State.enclos.alertSystem.status !== AlertStatus.ENABLED) {
           await this.mqttService.publish(
             Topic.enclosAlertOrder,
             FenceOrder.ENABLE,
           );
-          notifs.push(
-            '🛡️🕙 Allumage automatique des détecteurs de mouvements 🕙🛡️',
-          );
+          notifs.push('🛡️🕙 Allumage automatique des détecteurs de mouvements');
         }
       }
       if (!isAfternoon && currentFractionOfDay >= this.openTime) {
@@ -155,7 +151,7 @@ export class TimerService implements OnModuleInit {
             Topic.poulaillerDoorOrder,
             DoorOrder.OPEN,
           );
-          notifs.push('🚪🕙Ouverture automatique de la porte🕙🚪');
+          notifs.push('🚪🕙Ouverture automatique de la porte');
         }
       }
       if (State.enclos.alertSystem.status !== AlertStatus.DISABLED) {
@@ -163,9 +159,7 @@ export class TimerService implements OnModuleInit {
           Topic.enclosAlertOrder,
           FenceOrder.DISABLE,
         );
-        notifs.push(
-          '🛡️🕙 Extinction automatique des détecteurs de mouvements 🕙🛡️',
-        );
+        notifs.push('🛡️🕙 Extinction automatique des détecteurs de mouvements');
       }
 
       if (notifs.length) {
