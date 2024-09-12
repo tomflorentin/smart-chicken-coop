@@ -11,8 +11,6 @@ if (!PUSHOVER_TOKEN?.length || !PUSHOVER_USER?.length) {
 }
 
 export async function Notify(message: string): Promise<boolean> {
-  Logger.log('Sending notification ' + message);
-
   const body = {
     token: PUSHOVER_TOKEN,
     user: PUSHOVER_USER,
@@ -31,11 +29,10 @@ export async function Notify(message: string): Promise<boolean> {
 
     const payload = await response.json();
 
-    Logger.log('HTTP Response code:', response.status);
-    Logger.log(payload);
-
     const result = payload.status === 1;
-    Logger.log(`Notification sent: ${result ? 'success' : 'failure'}`);
+    Logger.log(
+      `Notification sent: ${message} / result: ${result ? 'success' : 'failure'}`,
+    );
 
     return result;
   } catch (error) {

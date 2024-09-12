@@ -58,7 +58,7 @@ void AlertSystem::work() {
         this->numberOfDetections = 0;
         this->alertStartedTime = 0;
         this->lightPin.write(false);
-        this->server.publish("enclos/alert/info", "enabled");
+        this->server.publish("enclos/alert/info", "restored");
     }
 }
 

@@ -45,6 +45,10 @@ export class AppService implements OnModuleInit {
       State.enclos.lastSeen > this.enclosDisconnectNotified &&
       nowMs - +State.enclos.lastSeen > secondsBeforeDisconnected * 1000
     ) {
+      Logger.log(
+        `Enclos disconnected : last notif ${this.poulaillerDisconnectNotified}`,
+      );
+      this.poulaillerDisconnectNotified = new Date();
       await Notify('💔 Enclos déconnecté');
     }
     if (
@@ -52,6 +56,10 @@ export class AppService implements OnModuleInit {
       State.poulailler.lastSeen > this.poulaillerDisconnectNotified &&
       nowMs - +State.poulailler.lastSeen > secondsBeforeDisconnected * 1000
     ) {
+      Logger.log(
+        `Poulailler disconnected : last notif ${this.poulaillerDisconnectNotified}`,
+      );
+      this.poulaillerDisconnectNotified = new Date();
       await Notify('💔 Poulailler déconnecté');
     }
 

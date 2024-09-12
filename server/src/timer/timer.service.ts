@@ -3,6 +3,7 @@ import xlsx from 'node-xlsx';
 import { Notify } from '../notify';
 import { MqttService, Topic } from '../mqtt/mqtt.service';
 import State, {
+  AlertOrder,
   AlertStatus,
   DoorOrder,
   DoorStatus,
@@ -92,7 +93,7 @@ export class TimerService implements OnModuleInit {
       this.openTime = tomorrowDay.open;
       this.closeTime = currentDay.close;
       await Notify(
-        `🕖 Ce soir (${currentDay.day})la porte se fermera à ${this.fractionOfDayHHMM(currentDay.close)}, et s'ouvrira demain ${tomorrowDay.day} à ${this.fractionOfDayHHMM(tomorrowDay.open)} 🕖`,
+        `🕖 Ce soir (${currentDay.day}) la porte se fermera à ${this.fractionOfDayHHMM(currentDay.close)}, et s'ouvrira demain (${tomorrowDay.day}) à ${this.fractionOfDayHHMM(tomorrowDay.open)} 🕖`,
       );
     } catch (e) {
       Logger.error('Error while reading timetable', e);
@@ -116,6 +117,7 @@ export class TimerService implements OnModuleInit {
 
       const notifs = [];
 
+      console.log(isAfternoon, currentFractionOfDay, this.closeTime);
       if (isAfternoon && currentFractionOfDay >= this.closeTime) {
         if (State.poulailler.door.status !== DoorStatus.CLOSED) {
           await this.mqttService.publish(
@@ -134,7 +136,7 @@ export class TimerService implements OnModuleInit {
         if (State.enclos.alertSystem.status !== AlertStatus.ENABLED) {
           await this.mqttService.publish(
             Topic.enclosAlertOrder,
-            FenceOrder.ENABLE,
+            AlertOrder.ENABLE,
           );
           notifs.push('🛡️🕙 Allumage automatique des détecteurs de mouvements');
         }
@@ -153,13 +155,15 @@ export class TimerService implements OnModuleInit {
           );
           notifs.push('🚪🕙Ouverture automatique de la porte');
         }
-      }
-      if (State.enclos.alertSystem.status !== AlertStatus.DISABLED) {
-        await this.mqttService.publish(
-          Topic.enclosAlertOrder,
-          FenceOrder.DISABLE,
-        );
-        notifs.push('🛡️🕙 Extinction automatique des détecteurs de mouvements');
+        if (State.enclos.alertSystem.status !== AlertStatus.DISABLED) {
+          await this.mqttService.publish(
+            Topic.enclosAlertOrder,
+            FenceOrder.DISABLE,
+          );
+          notifs.push(
+            '🛡️🕙 Extinction automatique des détecteurs de mouvements',
+          );
+        }
       }
 
       if (notifs.length) {
