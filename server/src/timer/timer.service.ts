@@ -173,7 +173,7 @@ export class TimerService implements OnModuleInit {
       }
     } catch (ex) {
       Logger.error('Error while checking timers', ex);
-      await Notify('⚠️ !!! Erreur de la tache de preparation a la nuit !!! ⚠️');
+      await Notify('⚠️ !!! Erreur de la tache de preparation a la nuit !!!');
     }
   }
 
@@ -181,7 +181,7 @@ export class TimerService implements OnModuleInit {
     await this.mqttService.publish(Topic.poulaillerDoorOrder, DoorOrder.STATUS);
     await new Promise<void>((resolve) => setTimeout(() => resolve(), 10000));
     if (State.poulailler.door.status !== DoorStatus.CLOSED) {
-      await Notify("⚠️ La porte n'est pas fermée ⚠️");
+      await Notify("⚠️ La porte n'est pas fermée ️");
     } else {
       await Notify(
         'Vérification du soir : La porte est correctement fermée ✅ Bonne nuit les poules 🐔',

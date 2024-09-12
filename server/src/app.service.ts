@@ -15,7 +15,7 @@ export class AppService implements OnModuleInit {
   private enclosDisconnectNotified = new Date();
 
   async onModuleInit() {
-    await Notify('🖥️ Système central démarré 🖥️');
+    await Notify('🖥️ Système central démarré');
     return this.refreshState();
   }
 
