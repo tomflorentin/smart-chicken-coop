@@ -17,12 +17,14 @@ public:
     void work();
     void publish(const char* topic, const char* message);
     Order getAction();
+    bool connect();
 
 private:
     WiFiClient espClient;
     PubSubClient client = PubSubClient(espClient);
     void handleCallback(char* topic, byte* payload, unsigned int length);
     Order lastOrder = Order::NONE;
+    unsigned long lastConnectionCheck = 0;
 };
 
 

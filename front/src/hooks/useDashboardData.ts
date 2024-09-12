@@ -16,7 +16,7 @@ interface Log {
     date: string;
 }
 
-const endpoint = 'http://192.168.1.111:3001';
+export const apiURL = 'http://tomf.myasustor.com/chicken-api';
 
 const useDashboardData = () => {
     const [state, setState] = useState<State>({});
@@ -26,7 +26,7 @@ const useDashboardData = () => {
     const fetchData = async () => {
         try {
             const password = getAuthentication();
-            const stateResponse = await fetch(endpoint + '/state', {headers: {Authorization:  password}});
+            const stateResponse = await fetch(apiURL + '/state', {headers: {Authorization:  password}});
             if (stateResponse.status === 403 || stateResponse.status === 401) {
                 alert("Mot de passe incorrect");
                 localStorage.removeItem('password');
@@ -36,11 +36,11 @@ const useDashboardData = () => {
             const stateData: State = await stateResponse.json();
             setState(stateData);
 
-            const tasksResponse = await fetch(endpoint+'/tasks', {headers: {Authorization:  password}});
+            const tasksResponse = await fetch(apiURL+'/tasks', {headers: {Authorization:  password}});
             const tasksData: Task[] = await tasksResponse.json();
             setTasks(tasksData);
 
-            const logsResponse = await fetch(endpoint+'/logs', {headers: {Authorization:  password}});
+            const logsResponse = await fetch(apiURL+'/logs', {headers: {Authorization:  password}});
             const logsData: Log[] = await logsResponse.json();
             setLogs(logsData);
         } catch (error) {

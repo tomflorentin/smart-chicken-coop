@@ -3,6 +3,7 @@ import React from 'react';
 import { Panel } from "primereact/panel";
 import { Button } from "primereact/button";
 import { getAuthentication } from "./password";
+import { apiURL } from "./hooks/useDashboardData";
 
 interface ActionProps {
     orderSent: () => void;
@@ -21,7 +22,7 @@ const Actions: React.FC<ActionProps> = ({ orderSent }) => {
 
     const handleAction = async (endpoint: string) => {
         try {
-            await fetch(`http://192.168.1.111:3001/${endpoint}`, { method: 'POST', headers: {Authorization: getAuthentication()} });
+            await fetch(`${apiURL}/${endpoint}`, { method: 'POST', headers: {Authorization: getAuthentication()} });
             orderSent();
         } catch (error) {
             console.error('Erreur lors de l\'exécution de l\'action:', error);

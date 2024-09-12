@@ -71,10 +71,6 @@ void AlertSystem::setup() {
     this->bootTime = millis();
 }
 
-bool AlertSystem::isInAlert() const {
-    return this->numberOfDetections != 0;
-}
-
 void AlertSystem::enable() {
     this->enabled = true;
     this->server.publish("enclos/alert/info", "enabled");

@@ -11,35 +11,14 @@ const char* mqtt_ssid = WIFI_SSID;
 const char* mqtt_password = WIFI_PASSWORD;
 char const * topics[] = {"enclos/ping", "enclos/fence/order", "enclos/alert/order", nullptr};
 
-
-
 void MQTTServer::setup() {
     WiFi.begin(mqtt_ssid, mqtt_password);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.println("Connecting to WiFi..");
-    } Serial.println("Connected to the Wi-Fi network");
-    //connexion au broker MQTT
     client.setServer("192.168.1.111", 1883);
     client.setCallback([this](char* topic, byte* payload, unsigned int length) {
         this->handleCallback(topic, payload, length);
     });
-    while (!client.connected()) {
-        String client_id = "esp32-client-";
-        client_id += String(WiFi.macAddress());
-        Serial.printf("The client %s connects to the public MQTT broker", client_id.c_str());
-        if (client.connect(client_id.c_str())) {
-            Serial.println("Public EMQX MQTT broker connected");
-        } else {
-            Serial.print("failed with state ");
-            Serial.print(client.state());
-            delay(2000);
-        }
-    }
-    for (int i = 0; topics[i] != nullptr; i++) {
-        client.subscribe(topics[i]);
-    }
-    Log("MQTT server setup done");
+    delay(5000);
+    this->connect();
 }
 
 void MQTTServer::handleCallback(char *topic, byte *payload, unsigned int length) {
@@ -83,6 +62,10 @@ void MQTTServer::publish(const char *topic, const char *message) {
 }
 
 void MQTTServer::work() {
+    unsigned long now = millis();
+    if (now - this->lastConnectionCheck > 10000) {
+        this->lastConnectionCheck = now;
+    }
     client.loop();
 }
 
@@ -90,4 +73,25 @@ Order MQTTServer::getAction() {
     Order order = lastOrder;
     lastOrder = Order::NONE;
     return order;
+}
+
+bool MQTTServer::connect() {
+    if (!WiFi.isConnected()) {
+        Log("Cannot connect to WiFi");
+        return false;
+    } else {
+        Log("Connected to WiFi");
+        if (!client.connected()) {
+            if (client.connect("esp32-client")) {
+                for (int i = 0; topics[i] != nullptr; i++) {
+                    client.subscribe(topics[i]);
+                }
+                Log("Connected to MQTT server");
+            } else {
+                Log("Cannot connect to MQTT server");
+                return false;
+            }
+        }
+    }
+    return true;
 }

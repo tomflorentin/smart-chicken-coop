@@ -102,7 +102,7 @@ void DoorController::executeOrder(Order order) {
             this->server.publish("poulailler/door/info", DoorController::doorStatusToString(this->status).c_str());
             break;
         case Order::STATUS_DOOR:
-            this->server.publish("poulailler/door/info", DoorController::doorStatusToString(this->status).c_str());
+            this->server.publish("poulailler/door/info", ("status-response " + DoorController::doorStatusToString(this->status)).c_str());
         default:
             break;
     }
