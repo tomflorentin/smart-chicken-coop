@@ -70,7 +70,7 @@ export class MqttService implements OnModuleInit {
         State.enclos.bootTime = new Date();
         this.publish(Topic.enclosFenceOrder, 'status');
         this.publish(Topic.enclosAlertOrder, 'status');
-        await Notify('🧱 Enclos démarré 🧱');
+        await Notify('🧱 Enclos démarré');
       },
     },
     {
@@ -80,7 +80,7 @@ export class MqttService implements OnModuleInit {
         State.poulailler.lastSeen = new Date();
         State.poulailler.bootTime = new Date();
         this.publish(Topic.poulaillerDoorOrder, 'status');
-        await Notify('🏠 Poulailler démarré 🏠');
+        await Notify('🏠 Poulailler démarré');
       },
     },
   ];
@@ -99,13 +99,13 @@ export class MqttService implements OnModuleInit {
       addIntermediateStatusToTasksWithTopic(Topic.poulaillerDoor, message);
     }
     if (message === 'opened') {
-      await Notify('🚪 Porte ouverte 🚪');
+      await Notify('🚪 Porte ouverte');
     }
     if (message === 'closed') {
-      await Notify('🚪 Porte fermée 🚪');
+      await Notify('🚪 Porte fermée');
     }
     if (message === DoorStatus.ABORTED) {
-      await Notify('🚪 Obstable détécté, abandon de la fermeture 🚪');
+      await Notify('🚪 Obstable détécté, abandon de la fermeture');
     }
   }
 
@@ -122,10 +122,10 @@ export class MqttService implements OnModuleInit {
       concludeTasksWithTopic(Topic.enclosAlert, message);
     }
     if (message === 'enabled') {
-      await Notify('🛡️ Détécteurs de mouvements activés 🛡️');
+      await Notify('🛡️ Détécteurs de mouvements activés');
     }
     if (message === 'disabled') {
-      await Notify('🛡️ Détécteurs de mouvements désactivés 🛡️');
+      await Notify('🛡️ Détécteurs de mouvements désactivés');
     }
     if (State.enclos.alertSystem.status === AlertStatus.RESTORED) {
       State.enclos.alertSystem.status = AlertStatus.ENABLED;
@@ -145,10 +145,10 @@ export class MqttService implements OnModuleInit {
       concludeTasksWithTopic(Topic.enclosFence, message);
     }
     if (message === 'enabled') {
-      await Notify('⚡ Clôture électrique activée ⚡');
+      await Notify('⚡ Clôture électrique activée');
     }
     if (message === 'disabled') {
-      await Notify('⚡ Clôture électrique désactivée ⚡');
+      await Notify('⚡ Clôture électrique désactivée');
     }
   }
 

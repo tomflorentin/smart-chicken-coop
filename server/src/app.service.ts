@@ -11,6 +11,9 @@ const secondsBeforeDisconnected = 120;
 export class AppService implements OnModuleInit {
   constructor(private readonly mqttService: MqttService) {}
 
+  private poulaillerDisconnectNotified = new Date();
+  private enclosDisconnectNotified = new Date();
+
   async onModuleInit() {
     await Notify('🖥️ Système central démarré 🖥️');
     return this.refreshState();
@@ -39,15 +42,17 @@ export class AppService implements OnModuleInit {
     }
     if (
       State.enclos.lastSeen &&
+      State.enclos.lastSeen > this.enclosDisconnectNotified &&
       nowMs - +State.enclos.lastSeen > secondsBeforeDisconnected * 1000
     ) {
-      await Notify('💔 Enclos déconnecté 💔');
+      await Notify('💔 Enclos déconnecté');
     }
     if (
       State.poulailler.lastSeen &&
+      State.poulailler.lastSeen > this.poulaillerDisconnectNotified &&
       nowMs - +State.poulailler.lastSeen > secondsBeforeDisconnected * 1000
     ) {
-      await Notify('💔 Poulailler déconnecté 💔');
+      await Notify('💔 Poulailler déconnecté');
     }
 
     // Statuses
