@@ -13,8 +13,6 @@ import State, {
 import { ConfigService } from '@nestjs/config';
 import { sleep } from '../utils';
 
-const tenMinutesAsFractionOfDay = 10 / (24 * 60);
-
 @Injectable()
 export class TimerService implements OnModuleInit {
   constructor(
@@ -26,6 +24,7 @@ export class TimerService implements OnModuleInit {
   private openTime: number;
 
   async onModuleInit() {
+    Logger.log('TIMEZONE IS ' + process.env.TZ);
     await this.loadTimers();
   }
 
