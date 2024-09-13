@@ -90,6 +90,8 @@ const ChickenCoop: React.FC<{ state: ChickenCoopStateType | null }> = ({ state }
                 return <Badge value="Fermeture avec laser" severity="info" />;
             case status.startsWith('force_closing'):
                 return <Badge value="Fermeture forcée" severity="info" />;
+            case status.startsWith("blocked"):
+                return <Badge value={"Bloquée"} severity={"danger"}/>
             default:
                 return <Badge value="Inconnu" severity="warning" />;
         }

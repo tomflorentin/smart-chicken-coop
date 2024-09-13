@@ -25,6 +25,7 @@ export enum DoorStatus {
   SAFE_CLOSING = 'safe_closing',
   OBSTRUCTED = 'safe_closing_obstructed',
   ABORTED = 'safe_closing_aborted',
+  BLOCKED = 'blocked',
 }
 
 export enum FenceStatus {

@@ -5,6 +5,7 @@
 #include "DoorController.h"
 #define STEPS_TIME 1000
 #define CONFIRM_TIME 500
+#define ORDER_TIMEOUT 10000
 
 DoorController::DoorController(MQTTServer &_server, uint8_t motorPin1, uint8_t motorPin2, uint8_t closedLimitSwitchPin,
                                uint8_t openedLimitSwitchPin, uint8_t laserEmitPin, uint8_t laserReceivePin)
@@ -33,6 +34,16 @@ void DoorController::setup() {
 }
 
 void DoorController::work() {
+    unsigned long now = millis();
+    if (status == DoorStatus::OPENING || status == DoorStatus::FORCE_CLOSING) {
+        if (this->orderStartTime - now >= ORDER_TIMEOUT) {
+            Log("Error, timeout");
+            this->motor.standby();
+            this->status = DoorStatus::BLOCKED;
+            this->lastOrderStatus = LastOrderStatus::ERROR_TIMEOUT;
+            this->server.publish("poulailler/door/info", DoorController::doorStatusToString(this->status).c_str());
+        }
+    }
     if (status == DoorStatus::OPENING) {
         if (openedLimitSwitch.read()) {
             finalizeOrder(openedLimitSwitch, DoorStatus::OPENED, "opened");
@@ -149,6 +160,8 @@ String DoorController::doorStatusToString(DoorStatus status) {
             return "opening";
         case DoorStatus::FORCE_CLOSING:
             return "force_closing";
+        case DoorStatus::BLOCKED:
+            return "blocked";
         default:
             return "unknown";
     }

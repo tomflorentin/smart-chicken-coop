@@ -105,6 +105,9 @@ export class MqttService implements OnModuleInit {
       addIntermediateStatusToTasksWithTopic(Topic.poulaillerDoor, message);
     }
     if (oldStatus === State.poulailler.door.status) return;
+    if (message === DoorStatus.BLOCKED) {
+      await Notify('❌ Porte bloquée !');
+    }
     if (message === DoorStatus.OPENED) {
       await Notify('🚪 Porte ouverte');
     }

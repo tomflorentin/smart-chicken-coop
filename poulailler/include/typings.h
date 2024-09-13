@@ -13,6 +13,7 @@ enum DoorStatus {
     SAFE_CLOSING = 3,
     OPENING = 4,
     FORCE_CLOSING = 5,
+    BLOCKED = 6,
 };
 
 
@@ -23,6 +24,7 @@ enum LastOrderStatus {
     ERROR_BLOCKED = 3,
     ERROR_ALREADY_SAME_STATE = 4,
     ERROR_LASER_STARTUP = 5,
+    ERROR_TIMEOUT = 6
 };
 
 enum Order : uint8_t {
