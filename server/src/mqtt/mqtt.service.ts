@@ -1,7 +1,12 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { connect, MqttClient } from 'mqtt';
-import State, { AlertStatus, DoorStatus, FenceStatus } from '../state';
+import State, {
+  AlertStatus,
+  DoorStatus,
+  FenceOrder,
+  FenceStatus,
+} from '../state';
 import {
   addIntermediateStatusToTasksWithTopic,
   concludeTasksWithTopic,
@@ -86,6 +91,7 @@ export class MqttService implements OnModuleInit {
   ];
 
   private async handlePoulaillerDoor(message: string) {
+    const oldStatus = State.poulailler.door.status;
     console.log('door', message);
     State.poulailler.lastSeen = new Date();
     if (message.startsWith('status-response')) {
@@ -98,10 +104,11 @@ export class MqttService implements OnModuleInit {
     } else {
       addIntermediateStatusToTasksWithTopic(Topic.poulaillerDoor, message);
     }
-    if (message === 'opened') {
+    if (oldStatus === State.poulailler.door.status) return;
+    if (message === DoorStatus.OPENED) {
       await Notify('🚪 Porte ouverte');
     }
-    if (message === 'closed') {
+    if (message === DoorStatus.CLOSED) {
       await Notify('🚪 Porte fermée');
     }
     if (message === DoorStatus.ABORTED) {
@@ -110,6 +117,7 @@ export class MqttService implements OnModuleInit {
   }
 
   private async handleEnclosAlert(message: string) {
+    const oldStatus = State.enclos.alertSystem.status;
     console.log('alert', message);
     State.enclos.lastSeen = new Date();
     if (message.startsWith('status-response')) {
@@ -118,14 +126,16 @@ export class MqttService implements OnModuleInit {
     }
     State.enclos.alertSystem.status = message as AlertStatus;
 
-    if (message === 'enabled' || message === 'disabled') {
+    if (message === AlertStatus.ENABLED || message === AlertStatus.ENABLED) {
       concludeTasksWithTopic(Topic.enclosAlert, message);
     }
-    if (message === 'enabled') {
-      await Notify('🛡️ Détécteurs de mouvements activés');
-    }
-    if (message === 'disabled') {
-      await Notify('🛡️ Détécteurs de mouvements désactivés');
+    if (oldStatus !== State.enclos.alertSystem.status) {
+      if (message === 'enabled') {
+        await Notify('🛡️ Détécteurs de mouvements activés');
+      }
+      if (message === 'disabled') {
+        await Notify('🛡️ Détécteurs de mouvements désactivés');
+      }
     }
     if (State.enclos.alertSystem.status === AlertStatus.RESTORED) {
       State.enclos.alertSystem.status = AlertStatus.ENABLED;
@@ -133,6 +143,7 @@ export class MqttService implements OnModuleInit {
   }
 
   private async handleEnclosFence(message: string) {
+    const oldStatus = State.enclos.electricFence.status;
     console.log('fence', message);
     State.enclos.lastSeen = new Date();
     if (message.startsWith('status-response')) {
@@ -141,9 +152,10 @@ export class MqttService implements OnModuleInit {
     }
     State.enclos.electricFence.status = message as FenceStatus;
 
-    if (message === 'enabled' || message === 'disabled') {
+    if (message === FenceStatus.ENABLED || message === FenceStatus.DISABLED) {
       concludeTasksWithTopic(Topic.enclosFence, message);
     }
+    if (oldStatus !== State.enclos.electricFence.status) return;
     if (message === 'enabled') {
       await Notify('⚡ Clôture électrique activée');
     }

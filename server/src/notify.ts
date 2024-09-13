@@ -5,12 +5,17 @@ import * as process from 'process';
 const url = 'http://api.pushover.net/1/messages.json';
 const PUSHOVER_TOKEN = process.env.PUSHOVER_TOKEN as string;
 const PUSHOVER_USER = process.env.PUSHOVER_USER as string;
+const SEND_NOTIF = process.env.SEND_NOTIF?.toLowerCase() === 'true';
 
 if (!PUSHOVER_TOKEN?.length || !PUSHOVER_USER?.length) {
   throw new Error('Missing Pushover token or user');
 }
 
 export async function Notify(message: string): Promise<boolean> {
+  if (!SEND_NOTIF) {
+    Logger.log('Notif skipped : ' + message);
+    return;
+  }
   const body = {
     token: PUSHOVER_TOKEN,
     user: PUSHOVER_USER,

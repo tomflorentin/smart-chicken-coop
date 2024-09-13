@@ -11,6 +11,7 @@ import State, {
   FenceStatus,
 } from '../state';
 import { ConfigService } from '@nestjs/config';
+import { sleep } from '../utils';
 
 const tenMinutesAsFractionOfDay = 10 / (24 * 60);
 
@@ -117,53 +118,17 @@ export class TimerService implements OnModuleInit {
 
       const notifs = [];
 
-      console.log(isAfternoon, currentFractionOfDay, this.closeTime);
+      console.log({
+        isAfternoon,
+        currentFractionOfDay,
+        closeTime: this.closeTime,
+        openTime: this.openTime,
+      });
       if (isAfternoon && currentFractionOfDay >= this.closeTime) {
-        if (State.poulailler.door.status !== DoorStatus.CLOSED) {
-          await this.mqttService.publish(
-            Topic.poulaillerDoorOrder,
-            DoorOrder.FORCE_CLOSE,
-          );
-          notifs.push('🚪🕙Fermeture automatique de la porte');
-        }
-        if (State.enclos.electricFence.status !== FenceStatus.ENABLED) {
-          await this.mqttService.publish(
-            Topic.enclosFenceOrder,
-            FenceOrder.ENABLE,
-          );
-          notifs.push('⚡🕙 Allumage automatique de la clôture électrique');
-        }
-        if (State.enclos.alertSystem.status !== AlertStatus.ENABLED) {
-          await this.mqttService.publish(
-            Topic.enclosAlertOrder,
-            AlertOrder.ENABLE,
-          );
-          notifs.push('🛡️🕙 Allumage automatique des détecteurs de mouvements');
-        }
+        await this.closeRoutine(notifs);
       }
       if (!isAfternoon && currentFractionOfDay >= this.openTime) {
-        if (State.poulailler.door.status !== DoorStatus.OPENED) {
-          if (currentFractionOfDay > 0.8 || currentFractionOfDay < 0.3) {
-            await Notify(
-              "Le système a tenté d'ouvrir la porte a une heure dangereuse ! annulation de l'ouverture",
-            );
-            return;
-          }
-          await this.mqttService.publish(
-            Topic.poulaillerDoorOrder,
-            DoorOrder.OPEN,
-          );
-          notifs.push('🚪🕙Ouverture automatique de la porte');
-        }
-        if (State.enclos.alertSystem.status !== AlertStatus.DISABLED) {
-          await this.mqttService.publish(
-            Topic.enclosAlertOrder,
-            FenceOrder.DISABLE,
-          );
-          notifs.push(
-            '🛡️🕙 Extinction automatique des détecteurs de mouvements',
-          );
-        }
+        await this.openRoutine(currentFractionOfDay, notifs);
       }
 
       if (notifs.length) {
@@ -171,13 +136,66 @@ export class TimerService implements OnModuleInit {
       }
     } catch (ex) {
       Logger.error('Error while checking timers', ex);
-      await Notify('⚠️ !!! Erreur de la tache de preparation a la nuit !!!');
+      await Notify(
+        '⚠️ !!! Erreur de la tache de preparation a la nuit/matin !!!',
+      );
+    }
+  }
+
+  private async openRoutine(currentFractionOfDay: number, notifs: any[]) {
+    if (State.poulailler.door.status !== DoorStatus.OPENED) {
+      if (currentFractionOfDay > 0.9 || currentFractionOfDay < 0.25) {
+        await Notify(
+          "Le système a tenté d'ouvrir la porte a une heure dangereuse ! annulation de l'ouverture",
+        );
+      } else {
+        await this.mqttService.publish(
+          Topic.poulaillerDoorOrder,
+          DoorOrder.OPEN,
+        );
+        notifs.push('🚪🕙Ouverture automatique de la porte');
+      }
+    } else {
+      Logger.log('Door already opened');
+    }
+    if (State.enclos.alertSystem.status !== AlertStatus.DISABLED) {
+      await this.mqttService.publish(
+        Topic.enclosAlertOrder,
+        FenceOrder.DISABLE,
+      );
+      notifs.push('🛡️🕙 Extinction automatique des détecteurs de mouvements');
+    } else {
+      Logger.log('Alert system already disabled');
+    }
+  }
+
+  private async closeRoutine(notifs: any[]) {
+    if (State.poulailler.door.status !== DoorStatus.CLOSED) {
+      await this.mqttService.publish(
+        Topic.poulaillerDoorOrder,
+        DoorOrder.FORCE_CLOSE,
+      );
+      notifs.push('🚪🕙Fermeture automatique de la porte');
+    } else {
+      Logger.log('Door already closed');
+    }
+    if (State.enclos.electricFence.status !== FenceStatus.ENABLED) {
+      await this.mqttService.publish(Topic.enclosFenceOrder, FenceOrder.ENABLE);
+      notifs.push('⚡🕙 Allumage automatique de la clôture électrique');
+    } else {
+      Logger.log('Electric Fence already enabled');
+    }
+    if (State.enclos.alertSystem.status !== AlertStatus.ENABLED) {
+      await this.mqttService.publish(Topic.enclosAlertOrder, AlertOrder.ENABLE);
+      notifs.push('🛡️🕙 Allumage automatique des détecteurs de mouvements');
+    } else {
+      Logger.log('Alert system already enabled');
     }
   }
 
   async safetyCheck() {
     await this.mqttService.publish(Topic.poulaillerDoorOrder, DoorOrder.STATUS);
-    await new Promise<void>((resolve) => setTimeout(() => resolve(), 10000));
+    await sleep(10000);
     if (State.poulailler.door.status !== DoorStatus.CLOSED) {
       await Notify("⚠️ La porte n'est pas fermée ️");
     } else {
