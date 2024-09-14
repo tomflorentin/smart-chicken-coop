@@ -8,10 +8,7 @@ import { TimerService } from './timer/timer.service';
 
 @Controller()
 export class AppController {
-  constructor(
-    private readonly appService: AppService,
-    private readonly timerService: TimerService,
-  ) {}
+  constructor(private readonly appService: AppService) {}
 
   @Get()
   getHello(): string {
@@ -71,15 +68,5 @@ export class AppController {
   @Post('alert/disable')
   disableAlert() {
     return this.appService.disableAlert();
-  }
-
-  @Post('timetable')
-  setTimetable() {
-    return this.timerService.loadTimers();
-  }
-
-  @Get('timetable')
-  getTimetable() {
-    return this.timerService.getTimers();
   }
 }

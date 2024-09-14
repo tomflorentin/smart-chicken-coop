@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get, Post } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { TimerService } from './timer.service';
 
@@ -18,5 +18,15 @@ export class TimerController {
   @Cron(CronExpression.EVERY_DAY_AT_10PM)
   safetyCheck() {
     return this.timerService.safetyCheck();
+  }
+
+  @Post('')
+  setTimetable() {
+    return this.timerService.loadTimers();
+  }
+
+  @Get('')
+  getTimetable() {
+    return this.timerService.getTimers();
   }
 }
