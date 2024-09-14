@@ -99,22 +99,25 @@ export class MqttService implements OnModuleInit {
       return;
     }
     State.poulailler.door.status = message as DoorStatus;
-    if (message === 'opened' || message === 'closed') {
+    if (
+      message.startsWith(DoorStatus.OPENED) ||
+      message.startsWith(DoorStatus.OPENED)
+    ) {
       concludeTasksWithTopic(Topic.poulaillerDoor, message);
     } else {
       addIntermediateStatusToTasksWithTopic(Topic.poulaillerDoor, message);
     }
     if (oldStatus === State.poulailler.door.status) return;
-    if (message === DoorStatus.BLOCKED) {
+    if (message.startsWith(DoorStatus.BLOCKED)) {
       await Notify('❌ Porte bloquée !');
     }
-    if (message === DoorStatus.OPENED) {
+    if (message.startsWith(DoorStatus.OPENED)) {
       await Notify('🚪 Porte ouverte');
     }
-    if (message === DoorStatus.CLOSED) {
+    if (message.startsWith(DoorStatus.CLOSED)) {
       await Notify('🚪 Porte fermée');
     }
-    if (message === DoorStatus.ABORTED) {
+    if (message.startsWith(DoorStatus.ABORTED)) {
       await Notify('🚪 Obstable détécté, abandon de la fermeture');
     }
   }
@@ -129,14 +132,17 @@ export class MqttService implements OnModuleInit {
     }
     State.enclos.alertSystem.status = message as AlertStatus;
 
-    if (message === AlertStatus.ENABLED || message === AlertStatus.ENABLED) {
+    if (
+      message.startsWith(AlertStatus.ENABLED) ||
+      message.startsWith(AlertStatus.ENABLED)
+    ) {
       concludeTasksWithTopic(Topic.enclosAlert, message);
     }
     if (oldStatus !== State.enclos.alertSystem.status) {
-      if (message === 'enabled') {
+      if (message.startsWith(AlertStatus.ENABLED)) {
         await Notify('🛡️ Détécteurs de mouvements activés');
       }
-      if (message === 'disabled') {
+      if (message.startsWith(AlertStatus.DISABLED)) {
         await Notify('🛡️ Détécteurs de mouvements désactivés');
       }
     }
@@ -155,14 +161,17 @@ export class MqttService implements OnModuleInit {
     }
     State.enclos.electricFence.status = message as FenceStatus;
 
-    if (message === FenceStatus.ENABLED || message === FenceStatus.DISABLED) {
+    if (
+      message.startsWith(FenceStatus.ENABLED) ||
+      message.startsWith(FenceStatus.DISABLED)
+    ) {
       concludeTasksWithTopic(Topic.enclosFence, message);
     }
     if (oldStatus !== State.enclos.electricFence.status) return;
-    if (message === 'enabled') {
+    if (message.startsWith(FenceStatus.ENABLED)) {
       await Notify('⚡ Clôture électrique activée');
     }
-    if (message === 'disabled') {
+    if (message.startsWith(FenceStatus.DISABLED)) {
       await Notify('⚡ Clôture électrique désactivée');
     }
   }
