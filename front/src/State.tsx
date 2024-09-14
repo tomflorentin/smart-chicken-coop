@@ -103,9 +103,9 @@ const ChickenCoop: React.FC<{ state: ChickenCoopStateType | null }> = ({ state }
             case status.startsWith('enabled'):
                 return <Badge value="Actif" severity="success" />;
             case status.startsWith('alert'):
-                return <Badge value="Alerte!" severity="danger" />;
+                return <Badge value="Alerte!" severity="warning" />;
             case status.startsWith('disabled'):
-                return <Badge value="Désactivé" severity="warning" />;
+                return <Badge value="Désactivé" severity="danger" />;
             default:
                 return <Badge value="Inconnu" severity="warning" />;
         }

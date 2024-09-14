@@ -21,7 +21,9 @@ export class TimerService implements OnModuleInit {
   ) {}
 
   private closeTime: number;
+  private closeTimeHasBeenProcessed = false;
   private openTime: number;
+  private openTimeHasBeenProcessed = false;
 
   async onModuleInit() {
     Logger.log('TIMEZONE IS ' + process.env.TZ);
@@ -67,8 +69,12 @@ export class TimerService implements OnModuleInit {
     return dayOfYear;
   }
 
-  async loadTimers() {
+  async loadTimers(resetHasBeenProcessed = false) {
     try {
+      if (resetHasBeenProcessed) {
+        this.closeTimeHasBeenProcessed = false;
+        this.openTimeHasBeenProcessed = false;
+      }
       const timetableRequest = await fetch(
         this.configService.get('TIMETABLE_URL'),
       );
@@ -103,6 +109,16 @@ export class TimerService implements OnModuleInit {
     }
   }
 
+  async getTimers() {
+    if (!this.openTime || !this.closeTime) {
+      await this.loadTimers();
+    }
+    return {
+      openTime: this.openTime,
+      closeTime: this.closeTime,
+    };
+  }
+
   async checkTimers() {
     try {
       Logger.log('Checking timers');
@@ -123,11 +139,21 @@ export class TimerService implements OnModuleInit {
         closeTime: this.closeTime,
         openTime: this.openTime,
       });
-      if (isAfternoon && currentFractionOfDay >= this.closeTime) {
+      if (
+        !this.closeTimeHasBeenProcessed &&
+        isAfternoon &&
+        currentFractionOfDay >= this.closeTime
+      ) {
         await this.closeRoutine(notifs);
+        this.closeTimeHasBeenProcessed = true;
       }
-      if (!isAfternoon && currentFractionOfDay >= this.openTime) {
+      if (
+        !this.openTimeHasBeenProcessed &&
+        !isAfternoon &&
+        currentFractionOfDay >= this.openTime
+      ) {
         await this.openRoutine(currentFractionOfDay, notifs);
+        this.openTimeHasBeenProcessed = true;
       }
 
       if (notifs.length) {

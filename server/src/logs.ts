@@ -11,5 +11,5 @@ export const Logs: Log[] = [];
 
 setInterval(() => {
   // Only keep 1000 logs, remove the oldest ones
-  Logs.sort((a, b) => +a.date - +b.date).slice(0, 1000);
+  Logs.sort((a, b) => +b.date - +a.date).slice(0, 1000);
 }, 1000 * 30);

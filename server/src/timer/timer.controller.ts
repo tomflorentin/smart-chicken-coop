@@ -7,7 +7,7 @@ export class TimerController {
   constructor(private readonly timerService: TimerService) {}
   @Cron(CronExpression.EVERY_DAY_AT_4PM)
   sendOpenAndCloseTimer() {
-    return this.timerService.loadTimers();
+    return this.timerService.loadTimers(true);
   }
 
   @Cron(CronExpression.EVERY_MINUTE)

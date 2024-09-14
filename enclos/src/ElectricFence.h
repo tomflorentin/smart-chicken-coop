@@ -10,13 +10,14 @@
 #include "Interfaces/ISetupable.hpp"
 #include "PinReader/DigitalPinWriter.hpp"
 #include "MQTTServer.h"
+#include "PinReader/DigitalPinReader.hpp"
 
 #define PULSE_DURATION 500
 #define PULSE_INTERVAL 2500
 
 class ElectricFence : ISetupable {
 public:
-    explicit ElectricFence(MQTTServer &_server, uint8_t _pin);
+    explicit ElectricFence(MQTTServer &_server, uint8_t _relayPin, uint8_t _manualSwitch, uint8_t _infoLedR, uint8_t _infoLedG);
     void setup() override;
     void work();
     void enable();
@@ -26,9 +27,14 @@ public:
 private:
     MQTTServer &server;
     DigitalPinWriter relay;
+    DigitalPinWriter redLed;
+    DigitalPinWriter greenLed;
+    DigitalPinReader manualSwitch;
     bool enabled = false;
-//    unsigned long lastPulseTime = 0;
-//    bool isPulsing = false;
+    unsigned long lastBlinkTime = 0;
+    bool isBlinking = false;
+    unsigned long lastButtonPressTime = 0;
+
 
 };
 

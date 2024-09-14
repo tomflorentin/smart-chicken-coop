@@ -42,5 +42,5 @@ export const addIntermediateStatusToTasksWithTopic = (
 
 setInterval(() => {
   // Only keep 100 tasks, remove the oldest ones
-  Tasks = Tasks.sort((a, b) => +a.timeStarted - +b.timeStarted).slice(0, 100);
+  Tasks = Tasks.sort((a, b) => +b.timeStarted - +a.timeStarted).slice(0, 100);
 }, 1000 * 300);

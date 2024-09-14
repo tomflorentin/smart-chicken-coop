@@ -5,7 +5,7 @@
 
 MQTTServer server;
 AlertSystem alertSystem(server, 2, 16, 1, 17);
-ElectricFence electricFence(server, 18);
+ElectricFence electricFence(server, 18, 19, 5, 4);
 
 void setup() {
     Serial.begin(9600);

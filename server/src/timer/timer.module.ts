@@ -8,5 +8,6 @@ import { ConfigModule } from '@nestjs/config';
   imports: [MqttModule, ConfigModule],
   controllers: [TimerController],
   providers: [TimerService],
+  exports: [TimerService],
 })
 export class TimerModule {}

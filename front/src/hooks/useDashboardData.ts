@@ -16,7 +16,8 @@ interface Log {
     date: string;
 }
 
-export const apiURL = 'http://tomf.myasustor.com/chicken-api';
+//export const apiURL = 'http://tomf.myasustor.com/chicken-api';
+export const apiURL = 'http://localhost:3001'
 
 const useDashboardData = () => {
     const [state, setState] = useState<State>({});

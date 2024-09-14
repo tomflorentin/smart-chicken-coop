@@ -6,8 +6,20 @@
 #include "ElectricFence.h"
 #include "func.h"
 
+#define BLINK_DURATION 100
+#define BLINK_INTERVAL 2000
+
 ElectricFence::ElectricFence(MQTTServer &_server, uint8_t _pin) : relay(_pin), server(_server) {
 
+}
+
+ElectricFence::ElectricFence(MQTTServer &_server, uint8_t _relayPin, uint8_t _manualSwitch, uint8_t _infoLedR, uint8_t _infoLedG)
+    : server(_server),
+        relay(_relayPin),
+        redLed(_infoLedR),
+        greenLed(_infoLedG),
+        manualSwitch(_manualSwitch, true)
+{
 }
 
 void ElectricFence::setup() {
@@ -15,42 +27,57 @@ void ElectricFence::setup() {
 }
 
 void ElectricFence::work() {
-//    unsigned int currentTime = millis();
-//    if (!this->enabled) {
-//        this->relay.write(false);
-//        return;
-//    }
-//    if (this->isPulsing) {
-//        if (currentTime - this->lastPulseTime > PULSE_DURATION) {
-//            Log("End of pulse");
-//            this->relay.write(false);
-//            this->isPulsing = false;
-//        }
-//    } else {
-//        if (currentTime - this->lastPulseTime > PULSE_INTERVAL) {
-//            Log("Starting pulse");
-//            this->relay.write(true);
-//            this->lastPulseTime = currentTime;
-//            this->isPulsing = true;
-//        }
-//    }
+    unsigned int currentTime = millis();
+    if (this->manualSwitch.read()) {
+        if (currentTime - this->lastButtonPressTime > 1000) {
+            if (this->enabled) {
+                this->disable();
+            } else {
+                this->enable();
+            }
+            this->lastButtonPressTime = currentTime;
+        }
+    }
+    if (this->isBlinking) {
+        if (currentTime - this->lastBlinkTime > BLINK_DURATION) {
+            Log("End of blink");
+            this->redLed.write(false);
+            this->greenLed.write(false);
+            this->isBlinking = false;
+        }
+    } else {
+        if (currentTime - this->lastBlinkTime > BLINK_INTERVAL) {
+            Log("Starting blink");
+            if (this->enabled) {
+                this->redLed.write(true);
+            } else {
+                this->greenLed.write(true);
+            }
+            this->lastBlinkTime = currentTime;
+            this->isBlinking = true;
+        }
+    }
 }
 
 void ElectricFence::enable() {
     this->enabled = true;
     this->relay.write(true);
-//    this->lastPulseTime = millis();
-//    this->isPulsing = false;
+    this->redLed.write(true);
+    this->lastBlinkTime = millis();
+    this->isBlinking = false;
     this->server.publish("enclos/fence/info", "enabled");
 }
 
 void ElectricFence::disable() {
     this->enabled = false;
-//    this->isPulsing = false;
     this->relay.write(false);
+    this->greenLed.write(true);
+    this->lastBlinkTime = millis();
+    this->isBlinking = false;
     this->server.publish("enclos/fence/info", "disabled");
 }
 
 String ElectricFence::getStatusStr() const {
     return this->enabled ? "enabled" : "disabled";
 }
+
