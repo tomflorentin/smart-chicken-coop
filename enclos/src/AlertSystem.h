@@ -20,7 +20,7 @@ struct AlertLog {
 
 class AlertSystem : public ISetupable {
 public:
-    AlertSystem(MQTTServer &_server, uint8_t _detector1, uint8_t _detector2, uint8_t _detector3, uint8_t _lightPin);
+    AlertSystem(MQTTServer &_server, uint8_t _detector1, uint8_t _detector2, uint8_t _lightPin);
     void work();
     void setup() override;
 
@@ -36,7 +36,6 @@ private:
     unsigned int numberOfDetections = 0;
     DigitalPinReader detector1;
     DigitalPinReader detector2;
-    DigitalPinReader detector3;
     DigitalPinWriter lightPin;
     LinkedList<AlertLog> alertList;
     bool isBooted = false;

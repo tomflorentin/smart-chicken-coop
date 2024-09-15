@@ -42,10 +42,16 @@ export enum AlertStatus {
     ALERT = 'alert',
 }
 
-export interface ChickenCoopStateType {
+export interface Detections {
+    dates: Date[];
+    timeInAlert: number;
+    lastDetection: Date;
+}
+
+export interface StateType {
     enclos: {
-        lastSeen: Date;
         bootTime: Date;
+        lastSeen: Date;
         electricFence: {
             lastOrder: FenceOrder;
             lastOrderDate: Date;
@@ -57,6 +63,7 @@ export interface ChickenCoopStateType {
             status: AlertStatus;
             lastOrder: AlertOrder;
             lastOrderDate: Date;
+            detections: Detections;
         };
     };
     poulailler: {
@@ -70,7 +77,8 @@ export interface ChickenCoopStateType {
     };
 }
 
-const ChickenCoop: React.FC<{ state: ChickenCoopStateType | null }> = ({ state }) => {
+
+const ChickenCoop: React.FC<{ state: StateType | null }> = ({ state }) => {
     const isDoorMoving = (status: DoorStatus | null) => {
         return status?.startsWith('opening') ||
             status?.startsWith('force_closing') ||
@@ -97,19 +105,38 @@ const ChickenCoop: React.FC<{ state: ChickenCoopStateType | null }> = ({ state }
         }
     };
 
-    const getAlertBadge = (status: AlertStatus | null) => {
+    const getAlertBadge = (status: AlertStatus | null, detections: Detections) => {
+        const detectionsStr = detections.dates?.length ? `${detections.dates.length} detections` : "";
+        const totalDetectionTime = detections.timeInAlert ? `lampe ON ${detections.timeInAlert}min` : "";
+        const additionalStr = `${detectionsStr} ${totalDetectionTime}`;
+        const getAdditionalBadge = (text: string) => (text.length > 1) && <Badge value={text} severity="info" />;
+
         if (!status) return <Badge value="?" severity="warning" />;
-        switch (true) {
-            case status.startsWith('enabled'):
-                return <Badge value="Actif" severity="success" />;
-            case status.startsWith('alert'):
-                return <Badge value="Alerte!" severity="warning" />;
-            case status.startsWith('disabled'):
-                return <Badge value="Désactivé" severity="danger" />;
-            default:
-                return <Badge value="Inconnu" severity="warning" />;
+
+        let badgeValue = '';
+        let severity: "success" | "warning" | "danger" = "warning";
+
+        if (status.startsWith('enabled')) {
+            badgeValue = "Actif";
+            severity = "success";
+        } else if (status.startsWith('alert')) {
+            badgeValue = "Alerte!";
+            severity = "warning";
+        } else if (status.startsWith('disabled')) {
+            badgeValue = "Désactivé";
+            severity = "danger";
+        } else {
+            badgeValue = "Inconnu";
         }
+
+        return (
+            <div>
+                <Badge value={badgeValue} severity={severity} />
+                {getAdditionalBadge(additionalStr)}
+            </div>
+        );
     };
+
 
     const getFenceBadge = (status: FenceStatus | null) => {
         if (!status) return <Badge value="?" severity="warning" />;
@@ -183,20 +210,20 @@ const ChickenCoop: React.FC<{ state: ChickenCoopStateType | null }> = ({ state }
 
             {/* Section Enclos */}
             <Card header="Enclos" className="p-mb-3">
-                <p>
+                <div>
                     <i className={`pi ${fenceConnection.severity === 'danger' ? 'pi-times-circle' : 'pi-check-circle'} p-mr-2`} style={{ color: fenceConnection.severity === 'danger' ? 'red' : 'green' }} />
                     {fenceConnection.status} {fenceConnection.duration}
-                </p>
-                <p>
+                </div>
+                <div>
                     <i className="pi pi-bolt p-mr-2" />
                     Clôture électrique: {getFenceBadge(state.enclos.electricFence.status)}
-                </p>
+                </div>
                 <Tooltip target=".fence-icon" content={`Dernière connexion : ${formatLastSeen(state.enclos.lastSeen)}`} />
 
-                <p>
+                <div>
                     <i className="pi pi-exclamation-circle p-mr-2" />
-                    Système d'alerte: {getAlertBadge(state.enclos.alertSystem.status)}
-                </p>
+                    Système d'alerte: {getAlertBadge(state.enclos.alertSystem.status, state.enclos.alertSystem.detections)}
+                </div>
             </Card>
         </div>
     );

@@ -6,13 +6,12 @@
 #include "AlertSystem.h"
 #include "func.h"
 
-#define ALERT_DURATION 1000 * 10 * 1
+#define ALERT_DURATION 1000 * 30
 #define DETECTION_INTERVAL 1000 * 5
 
-AlertSystem::AlertSystem(MQTTServer &_server, uint8_t _detector1, uint8_t _detector2, uint8_t _detector3, uint8_t _lightPin) :
+AlertSystem::AlertSystem(MQTTServer &_server, uint8_t _detector1, uint8_t _detector2, uint8_t _lightPin) :
     detector1(_detector1, false),
     detector2(_detector2, false),
-    detector3(_detector3, false),
     lightPin(_lightPin),
     server(_server)
 {
@@ -66,7 +65,6 @@ void AlertSystem::setup() {
     detector1.setup();
     detector2.setup();
     lightPin.setup();
-    lightPin.write(false);
     this->isBooted = false;
     this->bootTime = millis();
 }
