@@ -40,6 +40,12 @@ export enum AlertStatus {
   RESTORED = 'restored',
 }
 
+export interface Detections {
+  dates: Date[];
+  timeInAlert: number;
+  lastDetection: Date;
+}
+
 export interface StateType {
   enclos: {
     bootTime: Date;
@@ -55,6 +61,7 @@ export interface StateType {
       status: AlertStatus;
       lastOrder: AlertOrder;
       lastOrderDate: Date;
+      detections: Detections;
     };
   };
   poulailler: {
@@ -83,6 +90,11 @@ const State: StateType = {
       lastOrder: null,
       lastOrderDate: null,
       status: null,
+      detections: {
+        dates: [],
+        timeInAlert: 0,
+        lastDetection: null,
+      },
     },
   },
   poulailler: {

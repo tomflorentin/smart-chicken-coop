@@ -139,14 +139,29 @@ export class MqttService implements OnModuleInit {
       concludeTasksWithTopic(Topic.enclosAlert, message);
     }
     if (oldStatus !== State.enclos.alertSystem.status) {
+      if (message.startsWith(AlertStatus.ALERT)) {
+        State.enclos.alertSystem.detections.dates.push(new Date());
+        State.enclos.alertSystem.detections.lastDetection = new Date();
+      }
       if (message.startsWith(AlertStatus.ENABLED)) {
         await Notify('🛡️ Détécteurs de mouvements activés');
+        State.enclos.alertSystem.detections = {
+          dates: [],
+          timeInAlert: 0,
+          lastDetection: null,
+        };
       }
       if (message.startsWith(AlertStatus.DISABLED)) {
         await Notify('🛡️ Détécteurs de mouvements désactivés');
       }
     }
     if (State.enclos.alertSystem.status === AlertStatus.RESTORED) {
+      if (State.enclos.alertSystem.detections.lastDetection) {
+        const timeInAlert =
+          new Date().getTime() -
+          State.enclos.alertSystem.detections.lastDetection.getTime();
+        State.enclos.alertSystem.detections.timeInAlert += timeInAlert;
+      }
       State.enclos.alertSystem.status = AlertStatus.ENABLED;
     }
   }

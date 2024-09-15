@@ -7,11 +7,7 @@
 #include "func.h"
 
 #define BLINK_DURATION 100
-#define BLINK_INTERVAL 2000
-
-ElectricFence::ElectricFence(MQTTServer &_server, uint8_t _pin) : relay(_pin), server(_server) {
-
-}
+#define BLINK_INTERVAL 3000
 
 ElectricFence::ElectricFence(MQTTServer &_server, uint8_t _relayPin, uint8_t _manualSwitch, uint8_t _infoLedR, uint8_t _infoLedG)
     : server(_server),
@@ -23,7 +19,9 @@ ElectricFence::ElectricFence(MQTTServer &_server, uint8_t _relayPin, uint8_t _ma
 }
 
 void ElectricFence::setup() {
-    relay.setup();
+    this->relay.setup();
+    this->redLed.setup();
+    this->greenLed.setup();
 }
 
 void ElectricFence::work() {
@@ -40,14 +38,12 @@ void ElectricFence::work() {
     }
     if (this->isBlinking) {
         if (currentTime - this->lastBlinkTime > BLINK_DURATION) {
-            Log("End of blink");
             this->redLed.write(false);
             this->greenLed.write(false);
             this->isBlinking = false;
         }
     } else {
         if (currentTime - this->lastBlinkTime > BLINK_INTERVAL) {
-            Log("Starting blink");
             if (this->enabled) {
                 this->redLed.write(true);
             } else {
