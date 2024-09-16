@@ -106,8 +106,8 @@ const ChickenCoop: React.FC<{ state: StateType | null }> = ({ state }) => {
     };
 
     const getAlertBadge = (status: AlertStatus | null, detections: Detections) => {
-        const detectionsStr = detections.dates?.length ? `${detections.dates.length} detections` : "";
-        const totalDetectionTime = detections.timeInAlert ? `lampe ON ${detections.timeInAlert}min` : "";
+        const detectionsStr = detections.dates?.length ? `${detections.dates.length} det` : "";
+        const totalDetectionTime = detections.timeInAlert ? `${Math.round(detections.timeInAlert / (60000))}min` : "";
         const additionalStr = `${detectionsStr} ${totalDetectionTime}`;
         const getAdditionalBadge = (text: string) => (text.length > 1) && <Badge value={text} severity="info" />;
 
