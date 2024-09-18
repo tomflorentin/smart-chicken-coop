@@ -4,8 +4,8 @@
 #include "MQTTServer.h"
 
 MQTTServer server;
-AlertSystem alertSystem(server, 2, 4, 16);
-ElectricFence electricFence(server, 18, 5, 17, 16);
+AlertSystem alertSystem(server, 2, 21, 19);
+ElectricFence electricFence(server, 18, 22, 17, 16);
 
 void setup() {
     Serial.begin(9600);
@@ -13,7 +13,6 @@ void setup() {
     alertSystem.setup();
     electricFence.setup();
     server.publish("enclos/boot", "booted");
-    alertSystem.enable();
 }
 
 void loop() {

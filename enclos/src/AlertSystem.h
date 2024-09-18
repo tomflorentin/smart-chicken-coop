@@ -11,6 +11,7 @@
 #include "PinReader/DigitalPinWriter.hpp"
 #include "lib/LinkedList.h"
 #include "MQTTServer.h"
+#include "PinReader/LongDigitalPinReader.h"
 
 struct AlertLog {
     unsigned long startTime;
@@ -34,8 +35,8 @@ private:
     unsigned long alertStartedTime = 0;
     unsigned long alertLastDetectedTime = 0;
     unsigned int numberOfDetections = 0;
-    DigitalPinReader detector1;
-    DigitalPinReader detector2;
+    LongDigitalPinReader detector1;
+    LongDigitalPinReader detector2;
     DigitalPinWriter lightPin;
     LinkedList<AlertLog> alertList;
     bool isBooted = false;

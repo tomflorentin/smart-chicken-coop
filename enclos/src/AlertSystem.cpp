@@ -6,7 +6,7 @@
 #include "AlertSystem.h"
 #include "func.h"
 
-#define ALERT_DURATION 1000 * 30
+#define ALERT_DURATION 1000 * 5
 #define DETECTION_INTERVAL 1000 * 5
 
 AlertSystem::AlertSystem(MQTTServer &_server, uint8_t _detector1, uint8_t _detector2, uint8_t _lightPin) :
@@ -71,11 +71,15 @@ void AlertSystem::setup() {
 
 void AlertSystem::enable() {
     this->enabled = true;
+    this->lightPin.write(true);
+    delay(500);
+    this->lightPin.write(false);
     this->server.publish("enclos/alert/info", "enabled");
 }
 
 void AlertSystem::disable() {
     this->enabled = false;
+    this->lightPin.write(false);
     this->server.publish("enclos/alert/info", "disabled");
 }
 

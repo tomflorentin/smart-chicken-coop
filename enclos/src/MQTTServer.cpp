@@ -7,12 +7,10 @@
 #include "credentials.h"
 #include "func.h"
 
-const char* mqtt_ssid = WIFI_SSID;
-const char* mqtt_password = WIFI_PASSWORD;
 char const * topics[] = {"enclos/ping", "enclos/fence/order", "enclos/alert/order", nullptr};
 
 void MQTTServer::setup() {
-    WiFi.begin(mqtt_ssid, mqtt_password);
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     client.setServer("192.168.1.111", 1883);
     client.setCallback([this](char* topic, byte* payload, unsigned int length) {
         this->handleCallback(topic, payload, length);
@@ -78,16 +76,27 @@ Order MQTTServer::getAction() {
 
 bool MQTTServer::connect() {
     if (!WiFi.isConnected()) {
-        Log("Cannot connect to WiFi");
-        return false;
+        WiFi.disconnect(true);
+        if (this->backupMode) {
+            Log("Cannot connect to backup WiFi, reconnecting to main WiFi");
+            this->backupMode = false;
+            WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+            return false;
+        } else {
+            Log("Cannot connect to WiFi, trying backup WiFi");
+            WiFi.begin(BACKUP_WIFI_SSID, BACKUP_WIFI_PASSWORD);
+            this->backupMode = true;
+            return false;
+        }
     } else {
-        Log("Connected to WiFi");
+        Log("Connected to WiFi " + String(this->backupMode ? "backup" : "normal"));
         if (!client.connected()) {
             if (client.connect("esp32-client")) {
                 for (int i = 0; topics[i] != nullptr; i++) {
                     client.subscribe(topics[i]);
                 }
                 Log("Connected to MQTT server");
+                this->publish("enclos/wifi", this->backupMode ? "backup" : "normal");
             } else {
                 Log("Cannot connect to MQTT server");
                 return false;

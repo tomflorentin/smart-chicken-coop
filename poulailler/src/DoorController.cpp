@@ -36,7 +36,7 @@ void DoorController::setup() {
 void DoorController::work() {
     unsigned long now = millis();
     if (status == DoorStatus::OPENING || status == DoorStatus::FORCE_CLOSING) {
-        if (this->orderStartTime - now >= ORDER_TIMEOUT) {
+        if (now - this->orderStartTime >= ORDER_TIMEOUT) {
             Log("Error, timeout");
             this->motor.standby();
             this->status = DoorStatus::BLOCKED;

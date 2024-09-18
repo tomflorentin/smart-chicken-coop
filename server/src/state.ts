@@ -48,6 +48,8 @@ export interface Detections {
 
 export interface StateType {
   enclos: {
+    online: boolean;
+    wifi: 'normal' | 'backup' | null;
     bootTime: Date;
     lastSeen: Date;
     electricFence: {
@@ -65,6 +67,8 @@ export interface StateType {
     };
   };
   poulailler: {
+    online: boolean;
+    wifi: 'normal' | 'backup' | null;
     bootTime: Date;
     lastSeen: Date;
     door: {
@@ -79,6 +83,8 @@ const State: StateType = {
   enclos: {
     lastSeen: null,
     bootTime: null,
+    online: false,
+    wifi: null,
     electricFence: {
       lastOrder: null,
       lastOrderDate: null,
@@ -98,6 +104,8 @@ const State: StateType = {
     },
   },
   poulailler: {
+    online: false,
+    wifi: null,
     bootTime: null,
     lastSeen: null,
     door: {

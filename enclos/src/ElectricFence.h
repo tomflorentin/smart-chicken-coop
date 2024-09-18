@@ -11,6 +11,7 @@
 #include "PinReader/DigitalPinWriter.hpp"
 #include "MQTTServer.h"
 #include "PinReader/DigitalPinReader.hpp"
+#include "PinReader/LongDigitalPinReader.h"
 
 #define PULSE_DURATION 500
 #define PULSE_INTERVAL 2500
@@ -29,7 +30,7 @@ private:
     DigitalPinWriter relay;
     DigitalPinWriter redLed;
     DigitalPinWriter greenLed;
-    DigitalPinReader manualSwitch;
+    LongDigitalPinReader manualSwitch;
     bool enabled = false;
     unsigned long lastBlinkTime = 0;
     bool isBlinking = false;

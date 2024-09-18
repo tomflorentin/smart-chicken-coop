@@ -19,6 +19,7 @@ ElectricFence::ElectricFence(MQTTServer &_server, uint8_t _relayPin, uint8_t _ma
 }
 
 void ElectricFence::setup() {
+    this->manualSwitch.setup();
     this->relay.setup();
     this->redLed.setup();
     this->greenLed.setup();

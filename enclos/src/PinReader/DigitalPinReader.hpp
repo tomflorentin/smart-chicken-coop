@@ -13,7 +13,7 @@ class DigitalPinReader : public PinManager {
 public:
     DigitalPinReader(uint8_t pin, bool pullup, bool _reverse = false);
 
-    bool read() const;
+    virtual bool read();
     void setup() override;
 
 private:

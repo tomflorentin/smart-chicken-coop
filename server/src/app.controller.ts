@@ -4,7 +4,6 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import State from './state';
 import { Tasks } from './tasks';
 import { Logs } from './logs';
-import { TimerService } from './timer/timer.service';
 
 @Controller()
 export class AppController {
@@ -32,7 +31,7 @@ export class AppController {
 
   @Get('logs')
   getLogs() {
-    return Logs.sort((a, b) => +b.date - +a.date);
+    return Logs.sort((a, b) => +b.date - +a.date).slice(0, 100);
   }
 
   @Post('door/open')

@@ -25,6 +25,7 @@ private:
     void handleCallback(char* topic, byte* payload, unsigned int length);
     Order lastOrder = Order::NONE;
     unsigned long lastConnectionCheck = 0;
+    bool backupMode = false;
 };
 
 

@@ -1,12 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { connect, MqttClient } from 'mqtt';
-import State, {
-  AlertStatus,
-  DoorStatus,
-  FenceOrder,
-  FenceStatus,
-} from '../state';
+import State, { AlertStatus, DoorStatus, FenceStatus } from '../state';
 import {
   addIntermediateStatusToTasksWithTopic,
   concludeTasksWithTopic,
@@ -18,12 +13,14 @@ import { sleep } from '../utils';
 export enum Topic {
   poulaillerPing = 'poulailler/ping',
   poulaillerPong = 'poulailler/pong',
+  poulaillerWifi = 'poulailler/wifi',
   poulaillerBoot = 'poulailler/boot',
   poulaillerDoor = 'poulailler/door',
   poulaillerDoorOrder = 'poulailler/door/order',
   poulaillerDoorInfo = 'poulailler/door/info',
   enclosPing = 'enclos/ping',
   enclosPong = 'enclos/pong',
+  enclosWifi = 'enclos/wifi',
   enclosBoot = 'enclos/boot',
   enclosFence = 'enclos/fence',
   enclosFenceOrder = 'enclos/fence/order',
@@ -57,14 +54,14 @@ export class MqttService implements OnModuleInit {
       name: Topic.poulaillerPong,
       handler: () => {
         Logger.log('Poulailler pong received');
-        State.poulailler.lastSeen = new Date();
+        this.updateLastSeen('poulailler');
       },
     },
     {
       name: Topic.enclosPong,
       handler: () => {
         Logger.log('Enclos pong received');
-        State.enclos.lastSeen = new Date();
+        this.updateLastSeen('enclos');
       },
     },
     {
@@ -73,6 +70,7 @@ export class MqttService implements OnModuleInit {
         Logger.log('Enclos boot received');
         State.enclos.lastSeen = new Date();
         State.enclos.bootTime = new Date();
+        State.enclos.online = true;
         this.publish(Topic.enclosFenceOrder, 'status');
         this.publish(Topic.enclosAlertOrder, 'status');
         await Notify('🧱 Enclos démarré');
@@ -84,8 +82,37 @@ export class MqttService implements OnModuleInit {
         Logger.log('Poulailler boot received');
         State.poulailler.lastSeen = new Date();
         State.poulailler.bootTime = new Date();
+        State.poulailler.online = true;
         this.publish(Topic.poulaillerDoorOrder, 'status');
         await Notify('🏠 Poulailler démarré');
+      },
+    },
+    {
+      name: Topic.enclosWifi,
+      handler: (value: 'normal' | 'backup') => {
+        Logger.log('Enclos wifi received ' + value);
+        if (value === 'backup') {
+          void Notify('📶 Enclos sur le wifi backup').catch(() => null);
+        } else if (State.enclos.wifi === 'backup') {
+          void Notify('📶 Enclos revenu sur le wifi normal').catch(() => null);
+        }
+        State.enclos.wifi = value;
+        this.updateLastSeen('enclos');
+      },
+    },
+    {
+      name: Topic.poulaillerWifi,
+      handler: (value: 'normal' | 'backup') => {
+        Logger.log('Poulailler wifi received ' + value);
+        if (value === 'backup') {
+          void Notify('📶 Poulailler sur le wifi backup').catch(() => null);
+        } else if (State.poulailler.wifi === 'backup') {
+          void Notify('📶 Poulailler revenu sur le wifi normal').catch(
+            () => null,
+          );
+        }
+        State.poulailler.wifi = value;
+        this.updateLastSeen('poulailler');
       },
     },
   ];
@@ -93,7 +120,7 @@ export class MqttService implements OnModuleInit {
   private async handlePoulaillerDoor(message: string) {
     const oldStatus = State.poulailler.door.status;
     console.log('door', message);
-    State.poulailler.lastSeen = new Date();
+    this.updateLastSeen('poulailler');
     if (message.startsWith('status-response')) {
       State.poulailler.door.status = message.split(' ')[1] as DoorStatus;
       return;
@@ -125,7 +152,7 @@ export class MqttService implements OnModuleInit {
   private async handleEnclosAlert(message: string) {
     const oldStatus = State.enclos.alertSystem.status;
     console.log('alert', message);
-    State.enclos.lastSeen = new Date();
+    this.updateLastSeen('enclos');
     if (message.startsWith('status-response')) {
       State.enclos.alertSystem.status = message.split(' ')[1] as AlertStatus;
       return;
@@ -182,7 +209,7 @@ export class MqttService implements OnModuleInit {
     ) {
       concludeTasksWithTopic(Topic.enclosFence, message);
     }
-    if (oldStatus !== State.enclos.electricFence.status) return;
+    if (oldStatus === State.enclos.electricFence.status) return;
     if (message.startsWith(FenceStatus.ENABLED)) {
       await Notify('⚡ Clôture électrique activée');
     }
@@ -252,5 +279,17 @@ export class MqttService implements OnModuleInit {
     }
     this.lastMessageDate = new Date();
     this.mqttClient.publish(topic, payload);
+  }
+
+  private updateLastSeen(type: 'enclos' | 'poulailler') {
+    const now = new Date();
+    State[type].lastSeen = now;
+    if (!State[type].online) {
+      State[type].online = true;
+      State[type].bootTime = now;
+      void Notify(`${type === 'enclos' ? '🧱' : '🏠'} ${type} connecté`).catch(
+        () => null,
+      );
+    }
   }
 }

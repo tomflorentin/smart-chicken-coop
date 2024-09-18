@@ -5,7 +5,7 @@
 #include <Arduino.h>
 #include "DigitalPinReader.hpp"
 
-bool DigitalPinReader::read() const {
+bool DigitalPinReader::read() {
     bool res = digitalRead(this->pin);
     return this->reverse ? !res : res;
 }
