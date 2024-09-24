@@ -10,6 +10,7 @@
 #include "Interfaces/ISetupable.hpp"
 #include "lib/PubSubClient.h"
 #include "typings.h"
+#include "SafeConnection.h"
 
 class MQTTServer : ISetupable {
 public:
@@ -17,14 +18,11 @@ public:
     void work();
     void publish(const char* topic, const char* message);
     Order getAction();
-    bool connect();
 
 private:
-    WiFiClient espClient;
-    PubSubClient client = PubSubClient(espClient);
+    SafeConnection safeConnection = SafeConnection("poulailler");
     void handleCallback(char* topic, byte* payload, unsigned int length);
     Order lastOrder = Order::NONE;
-    unsigned long lastConnectionCheck = 0;
 };
 
 

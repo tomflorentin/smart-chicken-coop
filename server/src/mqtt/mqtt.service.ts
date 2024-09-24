@@ -93,7 +93,7 @@ export class MqttService implements OnModuleInit {
         Logger.log('Enclos wifi received ' + value);
         if (value === 'backup' && State.enclos.wifi !== 'backup') {
           void Notify('📶 Enclos sur le wifi backup').catch(() => null);
-        } else if (State.enclos.wifi === 'backup') {
+        } else if (value === 'normal' && State.enclos.wifi !== 'normal') {
           void Notify('📶 Enclos revenu sur le wifi normal').catch(() => null);
         }
         State.enclos.wifi = value;
@@ -106,7 +106,7 @@ export class MqttService implements OnModuleInit {
         Logger.log('Poulailler wifi received ' + value);
         if (value === 'backup' && State.poulailler.wifi !== 'backup') {
           void Notify('📶 Poulailler sur le wifi backup').catch(() => null);
-        } else if (State.poulailler.wifi === 'backup') {
+        } else if (value === 'normal' && State.poulailler.wifi !== 'normal') {
           void Notify('📶 Poulailler revenu sur le wifi normal').catch(
             () => null,
           );

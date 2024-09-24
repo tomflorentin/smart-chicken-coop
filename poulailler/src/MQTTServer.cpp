@@ -8,20 +8,18 @@
 #include "func.h"
 #include "typings.h"
 
-const char* mqtt_ssid = WIFI_SSID;
-const char* mqtt_password = WIFI_PASSWORD;
+#define MQTT_DOMAIN "192.168.1.111"
+#define MQTT_PORT 1883
+
 char const * topics[] = {"poulailler/door/order", "poulailler/ping", nullptr};
 
-
-
 void MQTTServer::setup() {
-    WiFi.begin(mqtt_ssid, mqtt_password);
-    client.setServer("192.168.1.111", 1883);
-    client.setCallback([this](char* topic, byte* payload, unsigned int length) {
+    safeConnection.addTopic("poulailler/door/order");
+    safeConnection.addTopic("poulailler/ping");
+    safeConnection.setCallback([this](char* topic, byte* payload, unsigned int length) {
         this->handleCallback(topic, payload, length);
     });
-    delay(5000);
-    this->connect();
+    safeConnection.setup();
 }
 
 void MQTTServer::handleCallback(char *topic, byte *payload, unsigned int length) {
@@ -51,17 +49,12 @@ void MQTTServer::handleCallback(char *topic, byte *payload, unsigned int length)
 }
 
 void MQTTServer::publish(const char *topic, const char *message) {
-    bool res = client.publish(topic, message);
+    bool res = this->safeConnection.publish(topic, message);
     Log("Publishing to [" + String(topic) + "] : " + message + " : " + (res ? "success" : "failed"));
 }
 
 void MQTTServer::work() {
-    unsigned long now = millis();
-    if (now - this->lastConnectionCheck > 10000) {
-        this->lastConnectionCheck = now;
-        this->connect();
-    }
-    client.loop();
+    this->safeConnection.work();
 }
 
 Order MQTTServer::getAction() {
@@ -70,23 +63,3 @@ Order MQTTServer::getAction() {
     return order;
 }
 
-bool MQTTServer::connect() {
-    if (!WiFi.isConnected()) {
-        Log("Cannot connect to WiFi");
-        return false;
-    } else {
-        Log("Connected to WiFi");
-        if (!client.connected()) {
-            if (client.connect("poulailler-esp32")) {
-                for (int i = 0; topics[i] != nullptr; i++) {
-                    client.subscribe(topics[i]);
-                }
-                Log("Connected to MQTT server");
-            } else {
-                Log("Cannot connect to MQTT server");
-                return false;
-            }
-        }
-    }
-    return true;
-}
