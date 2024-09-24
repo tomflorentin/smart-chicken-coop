@@ -50,6 +50,7 @@ export interface Detections {
 
 export interface StateType {
     enclos: {
+        wifi: string;
         bootTime: Date;
         lastSeen: Date;
         electricFence: {
@@ -67,6 +68,7 @@ export interface StateType {
         };
     };
     poulailler: {
+        wifi: string;
         bootTime: Date;
         lastSeen: Date;
         door: {
@@ -206,24 +208,30 @@ const ChickenCoop: React.FC<{ state: StateType | null }> = ({ state }) => {
                     </div>
                 )}
                 <Tooltip target=".door-icon" content={`Dernière connexion : ${formatLastSeen(state.poulailler.lastSeen)}`} />
+                <p>Wifi {state.poulailler.wifi}</p>
             </Card>
 
             {/* Section Enclos */}
             <Card header="Enclos" className="p-mb-3">
                 <div>
-                    <i className={`pi ${fenceConnection.severity === 'danger' ? 'pi-times-circle' : 'pi-check-circle'} p-mr-2`} style={{ color: fenceConnection.severity === 'danger' ? 'red' : 'green' }} />
+                    <i className={`pi ${fenceConnection.severity === 'danger' ? 'pi-times-circle' : 'pi-check-circle'} p-mr-2`}
+                       style={{color: fenceConnection.severity === 'danger' ? 'red' : 'green'}}/>
                     {fenceConnection.status} {fenceConnection.duration}
                 </div>
                 <div>
-                    <i className="pi pi-bolt p-mr-2" />
+                    <i className="pi pi-bolt p-mr-2"/>
                     Clôture électrique: {getFenceBadge(state.enclos.electricFence.status)}
                 </div>
-                <Tooltip target=".fence-icon" content={`Dernière connexion : ${formatLastSeen(state.enclos.lastSeen)}`} />
+                <Tooltip target=".fence-icon"
+                         content={`Dernière connexion : ${formatLastSeen(state.enclos.lastSeen)}`}/>
 
                 <div>
-                    <i className="pi pi-exclamation-circle p-mr-2" />
-                    Système d'alerte: {getAlertBadge(state.enclos.alertSystem.status, state.enclos.alertSystem.detections)}
+                    <i className="pi pi-exclamation-circle p-mr-2"/>
+                    Système
+                    d'alerte: {getAlertBadge(state.enclos.alertSystem.status, state.enclos.alertSystem.detections)}
                 </div>
+                <p>Wifi {state.enclos.wifi}</p>
+
             </Card>
         </div>
     );

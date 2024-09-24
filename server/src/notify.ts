@@ -11,37 +11,61 @@ if (!PUSHOVER_TOKEN?.length || !PUSHOVER_USER?.length) {
   throw new Error('Missing Pushover token or user');
 }
 
+let notificationQueue: string[] = [];
+let notificationTimer: NodeJS.Timeout | null = null;
+let notificationResolvers: Array<(value: boolean) => void> = [];
+
 export async function Notify(message: string): Promise<boolean> {
   if (!SEND_NOTIF) {
     Logger.log('Notif skipped : ' + message);
-    return;
+    return true;
   }
-  const body = {
-    token: PUSHOVER_TOKEN,
-    user: PUSHOVER_USER,
-    title: 'Poulailler',
-    message: message,
-  };
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
+  notificationQueue.push(message);
 
-    const payload = await response.json();
+  return new Promise((resolve) => {
+    notificationResolvers.push(resolve);
 
-    const result = payload.status === 1;
-    Logger.log(
-      `Notification sent: ${message} / result: ${result ? 'success' : 'failure'}`,
-    );
+    if (!notificationTimer) {
+      notificationTimer = setTimeout(async () => {
+        const messagesToSend = notificationQueue.join(', ');
+        notificationQueue = [];
+        notificationTimer = null;
 
-    return result;
-  } catch (error) {
-    console.error('Error sending notification:', error);
-    return false;
-  }
+        const body = {
+          token: PUSHOVER_TOKEN,
+          user: PUSHOVER_USER,
+          title: 'Poulailler',
+          message: messagesToSend,
+        };
+
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+          });
+
+          const payload = await response.json();
+
+          const result = payload.status === 1;
+          Logger.log(
+            `Notification sent: ${messagesToSend} / result: ${result ? 'success' : 'failure'}`,
+          );
+
+          // Résoudre toutes les promesses en attente
+          notificationResolvers.forEach((res) => res(result));
+          notificationResolvers = [];
+        } catch (error) {
+          console.error('Error sending notification:', error);
+
+          // Résoudre toutes les promesses avec false en cas d'erreur
+          notificationResolvers.forEach((res) => res(false));
+          notificationResolvers = [];
+        }
+      }, 10000); // Délai de 10 secondes
+    }
+  });
 }

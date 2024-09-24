@@ -91,7 +91,7 @@ export class MqttService implements OnModuleInit {
       name: Topic.enclosWifi,
       handler: (value: 'normal' | 'backup') => {
         Logger.log('Enclos wifi received ' + value);
-        if (value === 'backup') {
+        if (value === 'backup' && State.enclos.wifi !== 'backup') {
           void Notify('📶 Enclos sur le wifi backup').catch(() => null);
         } else if (State.enclos.wifi === 'backup') {
           void Notify('📶 Enclos revenu sur le wifi normal').catch(() => null);
@@ -104,7 +104,7 @@ export class MqttService implements OnModuleInit {
       name: Topic.poulaillerWifi,
       handler: (value: 'normal' | 'backup') => {
         Logger.log('Poulailler wifi received ' + value);
-        if (value === 'backup') {
+        if (value === 'backup' && State.poulailler.wifi !== 'backup') {
           void Notify('📶 Poulailler sur le wifi backup').catch(() => null);
         } else if (State.poulailler.wifi === 'backup') {
           void Notify('📶 Poulailler revenu sur le wifi normal').catch(
