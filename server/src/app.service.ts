@@ -1,15 +1,18 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MqttService, Topic } from './mqtt/mqtt.service';
 import State, { AlertOrder, DoorOrder, FenceOrder } from './state';
 import { Task, Tasks } from './tasks';
+import { Notify } from './notify';
 
 const secondsBeforePing = 30;
+const secondsBeforeDisconnected = 120;
 
 @Injectable()
 export class AppService implements OnModuleInit {
   constructor(private readonly mqttService: MqttService) {}
 
-  onModuleInit() {
+  async onModuleInit() {
+    await Notify('🖥️ Système central démarré');
     return this.refreshState();
   }
 
@@ -18,31 +21,51 @@ export class AppService implements OnModuleInit {
   }
 
   async refreshState() {
+    Logger.log('Refreshing state...');
     const nowMs = +new Date();
 
     // Pings
     if (
-      State.poulailler.lastSeen &&
+      !State.poulailler.lastSeen ||
       nowMs - +State.poulailler.lastSeen > secondsBeforePing * 1000
     ) {
-      this.mqttService.publish(Topic.poulaillerPing, 'ping');
+      await this.mqttService.publish(Topic.poulaillerPing, 'ping');
+    }
+    if (
+      !State.enclos.lastSeen ||
+      nowMs - +State.enclos.lastSeen > secondsBeforePing * 1000
+    ) {
+      await this.mqttService.publish(Topic.enclosPing, 'ping');
     }
     if (
       State.enclos.lastSeen &&
-      nowMs - +State.enclos.lastSeen > secondsBeforePing * 1000
+      State.enclos.online &&
+      nowMs - +State.enclos.lastSeen > secondsBeforeDisconnected * 1000
     ) {
-      this.mqttService.publish(Topic.enclosPing, 'ping');
+      State.enclos.online = false;
+      await Notify('💔 Enclos déconnecté');
+    }
+    if (
+      State.poulailler.lastSeen &&
+      State.poulailler.online &&
+      nowMs - +State.poulailler.lastSeen > secondsBeforeDisconnected * 1000
+    ) {
+      State.poulailler.online = false;
+      await Notify('💔 Poulailler déconnecté');
     }
 
     // Statuses
     if (!State.poulailler.door.status) {
-      this.mqttService.publish(Topic.poulaillerDoorOrder, DoorOrder.STATUS);
+      await this.mqttService.publish(
+        Topic.poulaillerDoorOrder,
+        DoorOrder.STATUS,
+      );
     }
     if (!State.enclos.electricFence.status) {
-      this.mqttService.publish(Topic.enclosFenceOrder, FenceOrder.STATUS);
+      await this.mqttService.publish(Topic.enclosFenceOrder, FenceOrder.STATUS);
     }
     if (!State.enclos.alertSystem.status) {
-      this.mqttService.publish(Topic.enclosAlertOrder, AlertOrder.STATUS);
+      await this.mqttService.publish(Topic.enclosAlertOrder, AlertOrder.STATUS);
     }
   }
 

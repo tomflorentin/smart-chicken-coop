@@ -1,0 +1,49 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    volumes:
+      - type: bind
+        source: ./server/mosquitto/config
+        target: /mosquitto/config
+        bind:
+          create_host_path: true
+      - type: bind
+        source: ./server/mosquitto/log
+        target: /mosquitto/log
+        bind:
+          create_host_path: true
+      - type: bind
+        source: ./server/mosquitto/data
+        target: /mosquitto/data
+        bind:
+          create_host_path: true
+    ports:
+      - target: 1883
+        published: 1883
+        protocol: tcp
+        mode: host
+      - target: 9001
+        published: 9001
+        protocol: tcp
+        mode: host
+  nestjs:
+    env_file:
+      - ./server/.env
+    build:
+        context: ./server
+        dockerfile: Dockerfile
+    environment:
+      NODE_ENV: "production"
+      PORT: "3001"
+      MOSQUITTO_HOST: "mosquitto"
+      MOSQUITTO_PORT: "1883"
+      SEND_NOTIF: "true"
+    ports:
+      - "3001:3001"
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    ports:
+      - target: 80
+        published: 3000

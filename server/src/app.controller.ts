@@ -3,6 +3,7 @@ import { AppService } from './app.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import State from './state';
 import { Tasks } from './tasks';
+import { Logs } from './logs';
 
 @Controller()
 export class AppController {
@@ -25,41 +26,46 @@ export class AppController {
 
   @Get('tasks')
   getTasks() {
-    return Tasks.sort((a, b) => +a.timeStarted - +b.timeStarted);
+    return Tasks.sort((a, b) => +b.timeStarted - +a.timeStarted);
+  }
+
+  @Get('logs')
+  getLogs() {
+    return Logs.sort((a, b) => +b.date - +a.date).slice(0, 100);
   }
 
   @Post('door/open')
   openDoor() {
-    this.appService.openDoor();
+    return this.appService.openDoor();
   }
 
   @Post('door/safe-close')
   safeCloseDoor() {
-    this.appService.safeCloseDoor();
+    return this.appService.safeCloseDoor();
   }
 
   @Post('door/force-close')
   forceCloseDoor() {
-    this.appService.forceCloseDoor();
+    return this.appService.forceCloseDoor();
   }
 
   @Post('fence/enable')
   enableFence() {
-    this.appService.enableFence();
+    return this.appService.enableFence();
   }
 
   @Post('fence/disable')
   disableFence() {
-    this.appService.disableFence();
+    return this.appService.disableFence();
   }
 
   @Post('alert/enable')
   enableAlert() {
-    this.appService.enableAlert();
+    return this.appService.enableAlert();
   }
 
   @Post('alert/disable')
   disableAlert() {
-    this.appService.disableAlert();
+    return this.appService.disableAlert();
   }
 }
