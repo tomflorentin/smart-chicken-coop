@@ -28,7 +28,7 @@ services:
         protocol: tcp
         mode: host
   nestjs:
-    restart: awlays
+    restart: always
     env_file:
       - ./server/.env
     build:
