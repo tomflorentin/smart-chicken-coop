@@ -1,5 +1,6 @@
 services:
   mosquitto:
+    restart: always
     image: eclipse-mosquitto:2
     volumes:
       - type: bind
@@ -27,6 +28,7 @@ services:
         protocol: tcp
         mode: host
   nestjs:
+    restart: awlays
     env_file:
       - ./server/.env
     build:
