@@ -192,6 +192,10 @@ export class TimerService implements OnModuleInit {
     } else {
       Logger.log('Alert system already disabled');
     }
+    notifs.push(
+      `🌡️ La temperature minimale cette nuit a été de ${State.poulailler.minTemperature}°C`,
+    );
+    State.poulailler.minTemperature = null;
   }
 
   private async closeRoutine(notifs: any[]) {
@@ -216,6 +220,10 @@ export class TimerService implements OnModuleInit {
     } else {
       Logger.log('Alert system already enabled');
     }
+    notifs.push(
+      `🌡️ La temperature maximale aujourd'hui a été de ${State.poulailler.maxTemperature}°C`,
+    );
+    State.poulailler.maxTemperature = null;
   }
 
   async safetyCheck() {

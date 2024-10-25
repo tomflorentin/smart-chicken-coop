@@ -9,28 +9,36 @@
 #include "credentials.h"
 #include "func.h"
 
-#define SCAN_INTERVAL 60000
+#define SCAN_INTERVAL 1000*3600
 #define GIVEUP_TIME 30000
+
 
 void SafeConnection::setup() {
     this->mqttClient.setServer("192.168.1.111", 1883);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    Log("Safe connection setup done");
 }
 
 void SafeConnection::work() {
 
     if (this->needToSwitchToBackup()) {
+        Log("Switching to backup");
         WiFi.disconnect();
         WiFi.begin(BACKUP_WIFI_SSID, BACKUP_WIFI_PASSWORD);
         this->backupMode = true;
+        this->connectionLostTime = 0;
     }
     if (this->needToSwitchToNormal()) {
+        Log("Switching to normal");
         WiFi.disconnect();
         WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
         this->backupMode = false;
+        this->connectionLostTime = 0;
     }
     if (WiFi.status() == WL_CONNECTED) {
+        Log("Connected to Wifi + " + String(this->backupMode ? "backup" : "normal"));
         if (this->mqttClient.state() != MQTT_CONNECTED) {
+            Log("Not connected to MQTT");
             this->mqttClient.disconnect();
             if (this->mqttClient.connect(("esp32-" + this->name).c_str())) {
                 for (int i = 0; i < this->topicIndex; i++) {
@@ -44,6 +52,7 @@ void SafeConnection::work() {
             this->mqttClient.loop();
         }
     } else {
+        Log("Not connected to Wifi + " + String(this->backupMode ? "backup" : "normal"));
         // Not connected to WiFi
     }
 }
@@ -76,14 +85,18 @@ bool SafeConnection::needToSwitchToNormal() {
 bool SafeConnection::needToSwitchToBackup() {
     if (WiFiClass::status() != WL_CONNECTED || this->mqttClient.state() != MQTT_CONNECTED) {
         if (connectionLostTime == 0) {
+            Log("Connection lost");
             connectionLostTime = millis();
         } else if (millis() - connectionLostTime > GIVEUP_TIME) {
+            Log("Giveup time reached " + String(millis() - connectionLostTime));
             return true;
         }
     } else {
+        Log("Connection OK");
         connectionLostTime = 0;
         return false;
     }
+    return false;
 }
 
 void SafeConnection::addTopic(const char *topic) {

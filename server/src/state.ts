@@ -71,6 +71,12 @@ export interface StateType {
     wifi: 'normal' | 'backup' | null;
     bootTime: Date;
     lastSeen: Date;
+    temperature: number;
+    minTemperature: number;
+    maxTemperature: number;
+    humidity: number;
+    minHumidity: number;
+    maxHumidity: number;
     door: {
       lastOrder: DoorOrder;
       lastOrderDate: Date;
@@ -108,6 +114,12 @@ const State: StateType = {
     wifi: null,
     bootTime: null,
     lastSeen: null,
+    humidity: null,
+    minHumidity: null,
+    maxHumidity: null,
+    temperature: null,
+    minTemperature: null,
+    maxTemperature: null,
     door: {
       lastOrder: null,
       lastOrderDate: null,

@@ -50,7 +50,8 @@ export interface Detections {
 
 export interface StateType {
     enclos: {
-        wifi: string;
+        online: boolean;
+        wifi: 'normal' | 'backup' | null;
         bootTime: Date;
         lastSeen: Date;
         electricFence: {
@@ -68,9 +69,16 @@ export interface StateType {
         };
     };
     poulailler: {
-        wifi: string;
+        online: boolean;
+        wifi: 'normal' | 'backup' | null;
         bootTime: Date;
         lastSeen: Date;
+        temperature: number;
+        minTemperature: number;
+        maxTemperature: number;
+        humidity: number;
+        minHumidity: number;
+        maxHumidity: number;
         door: {
             lastOrder: DoorOrder;
             lastOrderDate: Date;
@@ -78,7 +86,6 @@ export interface StateType {
         };
     };
 }
-
 
 const ChickenCoop: React.FC<{ state: StateType | null }> = ({ state }) => {
     const isDoorMoving = (status: DoorStatus | null) => {
@@ -209,6 +216,8 @@ const ChickenCoop: React.FC<{ state: StateType | null }> = ({ state }) => {
                 )}
                 <Tooltip target=".door-icon" content={`Dernière connexion : ${formatLastSeen(state.poulailler.lastSeen)}`} />
                 <p>Wifi {state.poulailler.wifi}</p>
+                <p>Temperature {state.poulailler.temperature}°C (min {state.poulailler.minTemperature}° / max ${state.poulailler.maxTemperature}°)</p>
+                <p>Humidité {state.poulailler.humidity}% (min {state.poulailler.minHumidity}% / max {state.poulailler.maxHumidity}%)</p>
             </Card>
 
             {/* Section Enclos */}

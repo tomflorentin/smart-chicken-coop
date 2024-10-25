@@ -8,7 +8,7 @@ import {
 } from '../tasks';
 import { Logs } from '../logs';
 import { Notify } from '../notify';
-import { sleep } from '../utils';
+import { capitalizeFirstLetter, sleep } from '../utils';
 
 export enum Topic {
   poulaillerPing = 'poulailler/ping',
@@ -18,6 +18,8 @@ export enum Topic {
   poulaillerDoor = 'poulailler/door',
   poulaillerDoorOrder = 'poulailler/door/order',
   poulaillerDoorInfo = 'poulailler/door/info',
+  poulaillerTemperature = 'poulailler/temperature',
+  poulaillerHumidity = 'poulailler/humidity',
   enclosPing = 'enclos/ping',
   enclosPong = 'enclos/pong',
   enclosWifi = 'enclos/wifi',
@@ -115,7 +117,40 @@ export class MqttService implements OnModuleInit {
         this.updateLastSeen('poulailler');
       },
     },
+    {
+      name: Topic.poulaillerTemperature,
+      handler: (value: string) => {
+        Logger.log('Poulailler temperature received ' + value);
+        this.assignValueMinAndMax('temperature', value);
+        this.updateLastSeen('poulailler');
+      },
+    },
+    {
+      name: Topic.poulaillerHumidity,
+      handler: (value: string) => {
+        Logger.log('Poulailler humidity received ' + value);
+        this.assignValueMinAndMax('humidity', value);
+        this.updateLastSeen('poulailler');
+      },
+    },
   ];
+
+  private assignValueMinAndMax(property: string, valueStr: string) {
+    const value = parseFloat(valueStr);
+    if (isNaN(value)) {
+      Logger.error('Invalid value received ' + valueStr);
+      return;
+    }
+    State.poulailler[property] = value;
+    State.poulailler[`min${capitalizeFirstLetter(property)}`] = Math.min(
+      State.poulailler[`min${capitalizeFirstLetter(property)}`],
+      value,
+    );
+    State.poulailler[`max${capitalizeFirstLetter(property)}`] = Math.max(
+      State.poulailler[`max${capitalizeFirstLetter(property)}`],
+      value,
+    );
+  }
 
   private async handlePoulaillerDoor(message: string) {
     const oldStatus = State.poulailler.door.status;

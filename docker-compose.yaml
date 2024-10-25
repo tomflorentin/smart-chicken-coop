@@ -43,6 +43,7 @@ services:
     ports:
       - "3001:3001"
   front:
+    restart: always
     build:
       context: ./front
       dockerfile: Dockerfile
