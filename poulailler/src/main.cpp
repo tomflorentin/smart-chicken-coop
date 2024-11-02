@@ -8,7 +8,7 @@
 MQTTServer server;
 DoorController door(server, 27, 26, 33, 25, 14, 36);
 ManualControl manualControl(server, 32);
-TemperatureMonitor temperatureMonitor(server, 4);
+TemperatureMonitor temperatureMonitor(server, 22);
 
 void setup() {
     Serial.begin(9200);
