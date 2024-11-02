@@ -216,7 +216,7 @@ const ChickenCoop: React.FC<{ state: StateType | null }> = ({ state }) => {
                 )}
                 <Tooltip target=".door-icon" content={`Dernière connexion : ${formatLastSeen(state.poulailler.lastSeen)}`} />
                 <p>Wifi {state.poulailler.wifi}</p>
-                <p>Temperature {state.poulailler.temperature}°C (min {state.poulailler.minTemperature}° / max ${state.poulailler.maxTemperature}°)</p>
+                <p>Temperature {state.poulailler.temperature}°C (min {state.poulailler.minTemperature}° / max {state.poulailler.maxTemperature}°)</p>
                 <p>Humidité {state.poulailler.humidity}% (min {state.poulailler.minHumidity}% / max {state.poulailler.maxHumidity}%)</p>
             </Card>
 
