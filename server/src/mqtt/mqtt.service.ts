@@ -142,10 +142,14 @@ export class MqttService implements OnModuleInit {
       return;
     }
     State.poulailler[property] = value;
-    State.poulailler[`min${capitalizeFirstLetter(property)}`] = Math.min(
-      State.poulailler[`min${capitalizeFirstLetter(property)}`],
-      value,
-    );
+    if (State.poulailler[`min${capitalizeFirstLetter(property)}`] === null) {
+      State.poulailler[`min${capitalizeFirstLetter(property)}`] = value;
+    } else {
+      State.poulailler[`min${capitalizeFirstLetter(property)}`] = Math.min(
+        State.poulailler[`min${capitalizeFirstLetter(property)}`],
+        value,
+      );
+    }
     State.poulailler[`max${capitalizeFirstLetter(property)}`] = Math.max(
       State.poulailler[`max${capitalizeFirstLetter(property)}`],
       value,
