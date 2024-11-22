@@ -5,7 +5,9 @@
 #include "DoorController.h"
 #define STEPS_TIME 1000
 #define CONFIRM_TIME 500
-#define ORDER_TIMEOUT 10000
+#define ORDER_TIMEOUT 15000
+#define SLOW_1 6000
+#define SLOW_2 3000
 
 DoorController::DoorController(MQTTServer &_server, uint8_t motorPin1, uint8_t motorPin2, uint8_t closedLimitSwitchPin,
                                uint8_t openedLimitSwitchPin, uint8_t laserEmitPin, uint8_t laserReceivePin)
@@ -42,6 +44,10 @@ void DoorController::work() {
             this->status = DoorStatus::BLOCKED;
             this->lastOrderStatus = LastOrderStatus::ERROR_TIMEOUT;
             this->server.publish("poulailler/door/info", DoorController::doorStatusToString(this->status).c_str());
+        } else if (now - this->orderStartTime >= SLOW_1) {
+            this->motor.forward(100);
+        } else if (now - this->orderStartTime >= SLOW_2) {
+            this->motor.forward(50);
         }
     }
     if (status == DoorStatus::OPENING) {
@@ -108,7 +114,7 @@ void DoorController::executeOrder(Order order) {
             } else {
                 status = DoorStatus::FORCE_CLOSING;
                 lastOrderStatus = LastOrderStatus::IN_PROGRESS;
-                motor.forward(255);
+                motor.forward(127);
             }
             this->server.publish("poulailler/door/info", DoorController::doorStatusToString(this->status).c_str());
             break;

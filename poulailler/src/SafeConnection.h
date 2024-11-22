@@ -33,6 +33,7 @@ private:
 
     WiFiClient wiFiClient;
     PubSubClient mqttClient = PubSubClient(wiFiClient);
+    bool bootSent = false;
 };
 
 

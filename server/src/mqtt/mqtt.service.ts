@@ -30,6 +30,7 @@ export enum Topic {
   enclosAlert = 'enclos/alert',
   enclosAlertOrder = 'enclos/alert/order',
   enclosAlertInfo = 'enclos/alert/info',
+  wifiScan = '+/wifi-scan',
 }
 
 @Injectable()
@@ -64,6 +65,12 @@ export class MqttService implements OnModuleInit {
       handler: () => {
         Logger.log('Enclos pong received');
         this.updateLastSeen('enclos');
+      },
+    },
+    {
+      name: Topic.wifiScan,
+      handler: (value) => {
+        Logger.log('Wifi scan received ' + value);
       },
     },
     {

@@ -16,7 +16,7 @@ interface Log {
     date: string;
 }
 
-export const apiURL = '/chicken-api';
+export const apiURL = '/api';
 // export const apiURL = 'http://localhost:3001';
 // export const apiURL = 'http://tomf.myasustor.com/chicken-api';
 

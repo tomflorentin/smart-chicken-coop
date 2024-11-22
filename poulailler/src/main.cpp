@@ -15,7 +15,6 @@ void setup() {
     server.setup();
     door.setup();
     temperatureMonitor.setup();
-    server.publish("poulailler/boot", "booted");
 }
 
 

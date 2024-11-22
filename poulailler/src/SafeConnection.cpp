@@ -46,7 +46,10 @@ void SafeConnection::work() {
                 this->mqttClient.publish((this->name + "/wifi").c_str(), this->backupMode ? "backup" : "normal");
             }
         } else {
-            // ALl OK
+            if (!this->bootSent) {
+                this->mqttClient.publish((this->name + "/boot").c_str(), "boot");
+                this->bootSent = true;
+            }
             this->mqttClient.loop();
         }
     } else {
@@ -63,8 +66,10 @@ bool SafeConnection::needToSwitchToNormal() {
     if (this->isScanning) {
         int count = WiFi.scanComplete();
         if (count >= 0) {
+            this->mqttClient.publish((this->name + "/wifi-scan").c_str(), String(count).c_str());
             this->isScanning = false;
             for (int i = 0; i < count; ++i) {
+                this->mqttClient.publish((this->name + "/wifi-scan").c_str(), WiFi.SSID(i).c_str());
                 if (WiFi.SSID(i) == WIFI_SSID) {
                     return true;
                 }
