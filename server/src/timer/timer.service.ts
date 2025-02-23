@@ -16,10 +16,13 @@ import State, {
 } from '../state';
 import { ConfigService } from '@nestjs/config';
 import { sleep } from '../utils';
+import { TaskService } from '../task/task.service';
 
 @Injectable()
 export class TimerService implements OnModuleInit {
   constructor(
+    @Inject(forwardRef(() => TaskService))
+    private readonly taskService: TaskService,
     @Inject(forwardRef(() => MqttService))
     private readonly mqttService: MqttService,
     private readonly configService: ConfigService,
@@ -175,59 +178,79 @@ export class TimerService implements OnModuleInit {
   }
 
   private async openRoutine(notifs: any[]) {
-    const currentFractionOfDay = this.getCurrentFractionOfDay();
-    if (State.poulailler.door.status !== DoorStatus.OPENED) {
-      if (currentFractionOfDay > 0.9 || currentFractionOfDay < 0.25) {
-        await Notify(
-          "Le système a tenté d'ouvrir la porte a une heure dangereuse ! annulation de l'ouverture",
-        );
+    try {
+      const currentFractionOfDay = this.getCurrentFractionOfDay();
+      if (State.poulailler.door.status !== DoorStatus.OPENED) {
+        if (currentFractionOfDay > 0.9 || currentFractionOfDay < 0.25) {
+          await Notify(
+            "Le système a tenté d'ouvrir la porte a une heure dangereuse ! annulation de l'ouverture",
+          );
+        } else {
+          await this.taskService.executeTask(
+            Topic.poulaillerDoorOrder,
+            DoorOrder.OPEN,
+          );
+          notifs.push('🚪🕙Ouverture automatique de la porte');
+        }
       } else {
-        await this.mqttService.publish(
-          Topic.poulaillerDoorOrder,
-          DoorOrder.OPEN,
-        );
-        notifs.push('🚪🕙Ouverture automatique de la porte');
+        Logger.log('Door already opened');
       }
-    } else {
-      Logger.log('Door already opened');
+      // if (State.enclos.alertSystem.status !== AlertStatus.DISABLED) {
+      //   await this.mqttService.publish(
+      //     Topic.enclosAlertOrder,
+      //     FenceOrder.DISABLE,
+      //   );
+      //   notifs.push('🛡️🕙 Extinction automatique des détecteurs de mouvements');
+      // } else {
+      //   Logger.log('Alert system already disabled');
+      // }
+      notifs.push(
+        `🌡️ La temperature minimale cette nuit a été de ${State.poulailler.minTemperature}°C`,
+      );
+      State.poulailler.minTemperature = null;
+    } catch (ex) {
+      notifs.push("⚠️ Erreur de la routine d'ouverture ⚠️ : " + ex.message);
     }
-    // if (State.enclos.alertSystem.status !== AlertStatus.DISABLED) {
-    //   await this.mqttService.publish(
-    //     Topic.enclosAlertOrder,
-    //     FenceOrder.DISABLE,
-    //   );
-    //   notifs.push('🛡️🕙 Extinction automatique des détecteurs de mouvements');
-    // } else {
-    //   Logger.log('Alert system already disabled');
-    // }
-    notifs.push(
-      `🌡️ La temperature minimale cette nuit a été de ${State.poulailler.minTemperature}°C`,
-    );
-    State.poulailler.minTemperature = null;
   }
 
   private async closeRoutine(notifs: any[]) {
-    if (State.poulailler.door.status !== DoorStatus.CLOSED) {
-      await this.mqttService.publish(
-        Topic.poulaillerDoorOrder,
-        DoorOrder.FORCE_CLOSE,
+    try {
+      if (State.poulailler.door.status !== DoorStatus.CLOSED) {
+        await this.taskService.executeTask(
+          Topic.poulaillerDoorOrder,
+          DoorOrder.FORCE_CLOSE,
+        );
+        notifs.push('🚪🕙Fermeture automatique de la porte');
+      } else {
+        Logger.log('Door already closed');
+      }
+    } catch (ex) {
+      notifs.push(
+        '⚠️ Erreur de la routine de fermeture de la porte ⚠️ : ' + ex.message,
       );
-      notifs.push('🚪🕙Fermeture automatique de la porte');
-    } else {
-      Logger.log('Door already closed');
     }
-    if (State.enclos.electricFence.status !== FenceStatus.ENABLED) {
-      await this.mqttService.publish(Topic.enclosFenceOrder, FenceOrder.ENABLE);
-      notifs.push('⚡🕙 Allumage automatique de la clôture électrique');
-    } else {
-      Logger.log('Electric Fence already enabled');
+    try {
+      if (State.enclos.electricFence.status !== FenceStatus.ENABLED) {
+        await this.taskService.executeTask(
+          Topic.enclosFenceOrder,
+          FenceOrder.ENABLE,
+        );
+        notifs.push('⚡🕙 Allumage automatique de la clôture électrique');
+      } else {
+        Logger.log('Electric Fence already enabled');
+      }
+      // if (State.enclos.alertSystem.status !== AlertStatus.ENABLED) {
+      //   await this.mqttService.publish(Topic.enclosAlertOrder, AlertOrder.ENABLE);
+      //   notifs.push('🛡️🕙 Allumage automatique des détecteurs de mouvements');
+      // } else {
+      //   Logger.log('Alert system already enabled');
+      // }
+    } catch (ex) {
+      notifs.push(
+        "⚠️ Erreur de la routine d'allumage de l'electricité ⚠️ : " +
+          ex.message,
+      );
     }
-    // if (State.enclos.alertSystem.status !== AlertStatus.ENABLED) {
-    //   await this.mqttService.publish(Topic.enclosAlertOrder, AlertOrder.ENABLE);
-    //   notifs.push('🛡️🕙 Allumage automatique des détecteurs de mouvements');
-    // } else {
-    //   Logger.log('Alert system already enabled');
-    // }
     notifs.push(
       `🌡️ La temperature maximale aujourd'hui a été de ${State.poulailler.maxTemperature}°C`,
     );

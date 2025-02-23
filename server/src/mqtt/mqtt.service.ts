@@ -13,14 +13,11 @@ import State, {
   FenceOrder,
   FenceStatus,
 } from '../state';
-import {
-  addIntermediateStatusToTasksWithTopic,
-  concludeTasksWithTopic,
-} from '../tasks';
 import { Logs } from '../logs';
 import { Notify } from '../notify';
 import { capitalizeFirstLetter, sleep } from '../utils';
 import { TimerService } from '../timer/timer.service';
+import { TaskService } from '../task/task.service';
 
 export enum Topic {
   poulaillerPing = 'poulailler/ping',
@@ -51,6 +48,8 @@ export class MqttService implements OnModuleInit {
     private configService: ConfigService,
     @Inject(forwardRef(() => TimerService))
     private readonly timerService: TimerService,
+    @Inject(forwardRef(() => TaskService))
+    private readonly taskService: TaskService,
   ) {}
 
   private mqttClient: MqttClient;
@@ -192,9 +191,12 @@ export class MqttService implements OnModuleInit {
       message.startsWith(DoorStatus.OPENED) ||
       message.startsWith(DoorStatus.OPENED)
     ) {
-      concludeTasksWithTopic(Topic.poulaillerDoor, message);
+      this.taskService.concludeTasksWithTopic(Topic.poulaillerDoor, message);
     } else {
-      addIntermediateStatusToTasksWithTopic(Topic.poulaillerDoor, message);
+      this.taskService.addIntermediateStatusToTasksWithTopic(
+        Topic.poulaillerDoor,
+        message,
+      );
     }
     if (oldStatus === State.poulailler.door.status) return;
     if (message.startsWith(DoorStatus.BLOCKED)) {
@@ -225,7 +227,7 @@ export class MqttService implements OnModuleInit {
       message.startsWith(AlertStatus.ENABLED) ||
       message.startsWith(AlertStatus.ENABLED)
     ) {
-      concludeTasksWithTopic(Topic.enclosAlert, message);
+      this.taskService.concludeTasksWithTopic(Topic.enclosAlert, message);
     }
     if (oldStatus !== State.enclos.alertSystem.status) {
       if (message.startsWith(AlertStatus.ALERT)) {
@@ -275,7 +277,7 @@ export class MqttService implements OnModuleInit {
           await Notify('⚡ Clôture électrique réactivée automatiquement');
         }, 300 * 1000);
       }
-      concludeTasksWithTopic(Topic.enclosFence, message);
+      this.taskService.concludeTasksWithTopic(Topic.enclosFence, message);
     }
     if (oldStatus === State.enclos.electricFence.status) return;
     if (message.startsWith(FenceStatus.ENABLED)) {

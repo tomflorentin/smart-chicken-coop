@@ -3,9 +3,14 @@ import { TimerController } from './timer.controller';
 import { TimerService } from './timer.service';
 import { MqttModule } from '../mqtt/mqtt.module';
 import { ConfigModule } from '@nestjs/config';
+import { TaskModule } from '../task/task.module';
 
 @Module({
-  imports: [forwardRef(() => MqttModule), ConfigModule],
+  imports: [
+    forwardRef(() => TaskModule),
+    forwardRef(() => MqttModule),
+    ConfigModule,
+  ],
   controllers: [TimerController],
   providers: [TimerService],
   exports: [TimerService],

@@ -2,8 +2,8 @@ import { Controller, Get, Post } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import State from './state';
-import { Tasks } from './tasks';
 import { Logs } from './logs';
+import { Tasks } from './task/task.service';
 
 @Controller()
 export class AppController {

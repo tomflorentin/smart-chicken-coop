@@ -1,15 +1,19 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { MqttService, Topic } from './mqtt/mqtt.service';
 import State, { AlertOrder, DoorOrder, FenceOrder } from './state';
-import { Task, Tasks } from './tasks';
+import { Task } from './tasks';
 import { Notify } from './notify';
+import { TaskService } from './task/task.service';
 
 const secondsBeforePing = 30;
 const secondsBeforeDisconnected = 120;
 
 @Injectable()
 export class AppService implements OnModuleInit {
-  constructor(private readonly mqttService: MqttService) {}
+  constructor(
+    private readonly taskService: TaskService,
+    private readonly mqttService: MqttService,
+  ) {}
 
   async onModuleInit() {
     await Notify('🖥️ Système central démarré');
@@ -70,43 +74,39 @@ export class AppService implements OnModuleInit {
   }
 
   disableAlert() {
-    Tasks.push(new Task(Topic.enclosAlert, AlertOrder.DISABLE));
-    return this.mqttService.publish(Topic.enclosAlertOrder, AlertOrder.DISABLE);
+    return this.taskService.executeTask(Topic.enclosAlert, AlertOrder.DISABLE);
   }
 
   enableAlert() {
-    Tasks.push(new Task(Topic.enclosAlert, AlertOrder.ENABLE));
-    return this.mqttService.publish(Topic.enclosAlertOrder, AlertOrder.ENABLE);
+    return this.taskService.executeTask(Topic.enclosAlert, AlertOrder.ENABLE);
   }
 
   disableFence() {
-    Tasks.push(new Task(Topic.enclosFence, FenceOrder.DISABLE));
-    return this.mqttService.publish(Topic.enclosFenceOrder, FenceOrder.DISABLE);
+    return this.taskService.executeTask(Topic.enclosFence, FenceOrder.DISABLE);
   }
 
   enableFence() {
-    Tasks.push(new Task(Topic.enclosFence, FenceOrder.ENABLE));
-    return this.mqttService.publish(Topic.enclosFenceOrder, FenceOrder.ENABLE);
+    return this.taskService.executeTask(Topic.enclosFence, FenceOrder.ENABLE);
   }
 
   forceCloseDoor() {
-    Tasks.push(new Task(Topic.poulaillerDoor, DoorOrder.FORCE_CLOSE));
-    return this.mqttService.publish(
-      Topic.poulaillerDoorOrder,
-      DoorOrder.FORCE_CLOSE,
-    );
+    this.taskService
+      .executeTask(Topic.poulaillerDoor, DoorOrder.FORCE_CLOSE)
+      .then()
+      .catch(console.warn); // Do not wait for this long task
   }
 
   safeCloseDoor() {
-    Tasks.push(new Task(Topic.poulaillerDoor, DoorOrder.SAFE_CLOSE));
-    return this.mqttService.publish(
-      Topic.poulaillerDoorOrder,
-      DoorOrder.SAFE_CLOSE,
-    );
+    this.taskService
+      .executeTask(Topic.poulaillerDoor, DoorOrder.SAFE_CLOSE)
+      .then()
+      .catch(console.warn); // Do not wait for this long task
   }
 
   openDoor() {
-    Tasks.push(new Task(Topic.poulaillerDoor, DoorOrder.OPEN));
-    return this.mqttService.publish(Topic.poulaillerDoorOrder, DoorOrder.OPEN);
+    this.taskService
+      .executeTask(Topic.poulaillerDoor, DoorOrder.OPEN)
+      .then()
+      .catch(console.warn); // Do not wait for this long task
   }
 }
