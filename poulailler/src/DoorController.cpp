@@ -5,9 +5,12 @@
 #include "DoorController.h"
 #define STEPS_TIME 1000
 #define CONFIRM_TIME 500
-#define ORDER_TIMEOUT 15000
-#define SLOW_1 6000
-#define SLOW_2 3000
+#define OPEN_TIMEOUT 11000
+#define OPEN_SLOW 6300
+#define OPEN_SLOW_SPEED 130
+#define CLOSE_TIMEOUT 8500
+#define CLOSE_SLOW 5500
+#define CLOSE_SLOW_SPEED 80
 
 DoorController::DoorController(MQTTServer &_server, uint8_t motorPin1, uint8_t motorPin2, uint8_t closedLimitSwitchPin,
                                uint8_t openedLimitSwitchPin, uint8_t laserEmitPin, uint8_t laserReceivePin)
@@ -25,6 +28,7 @@ void DoorController::setup() {
     closedLimitSwitch.setup();
     openedLimitSwitch.setup();
     motor.setup();
+    Log("Close switch : " + String(closedLimitSwitch.read()));
     if (closedLimitSwitch.read()) {
         status = DoorStatus::CLOSED;
     } else if (openedLimitSwitch.read()) {
@@ -37,17 +41,29 @@ void DoorController::setup() {
 
 void DoorController::work() {
     unsigned long now = millis();
-    if (status == DoorStatus::OPENING || status == DoorStatus::FORCE_CLOSING) {
-        if (now - this->orderStartTime >= ORDER_TIMEOUT) {
+    if (status == DoorStatus::OPENING) {
+        Log("opening " + String(now - this->orderStartTime) + " closed["+ this->closedLimitSwitch.read() + "] opened[" + this->openedLimitSwitch.read() + "]");
+        if (now - this->orderStartTime >= OPEN_TIMEOUT) {
             Log("Error, timeout");
             this->motor.standby();
             this->status = DoorStatus::BLOCKED;
             this->lastOrderStatus = LastOrderStatus::ERROR_TIMEOUT;
             this->server.publish("poulailler/door/info", DoorController::doorStatusToString(this->status).c_str());
-        } else if (now - this->orderStartTime >= SLOW_1) {
-            this->motor.forward(100);
-        } else if (now - this->orderStartTime >= SLOW_2) {
-            this->motor.forward(50);
+        } else if (now - this->orderStartTime >= OPEN_SLOW) {
+            Log("open going slow");
+            this->motor.backward(OPEN_SLOW_SPEED);
+        }
+    }
+    if (status == DoorStatus::FORCE_CLOSING) {
+        Log("closing " + String(now - this->orderStartTime) + " closed["+ this->closedLimitSwitch.read() + "] opened[" + this->openedLimitSwitch.read() + "]");
+        if (now - this->orderStartTime >= CLOSE_TIMEOUT) {
+            Log("Error, timeout");
+            this->motor.standby();
+            this->status = DoorStatus::BLOCKED;
+            this->lastOrderStatus = LastOrderStatus::ERROR_TIMEOUT;
+            this->server.publish("poulailler/door/info", DoorController::doorStatusToString(this->status).c_str());
+        } else if (now - this->orderStartTime >= CLOSE_SLOW) {
+            this->motor.forward(CLOSE_SLOW_SPEED);
         }
     }
     if (status == DoorStatus::OPENING) {
@@ -114,7 +130,7 @@ void DoorController::executeOrder(Order order) {
             } else {
                 status = DoorStatus::FORCE_CLOSING;
                 lastOrderStatus = LastOrderStatus::IN_PROGRESS;
-                motor.forward(127);
+                motor.forward(255);
             }
             this->server.publish("poulailler/door/info", DoorController::doorStatusToString(this->status).c_str());
             break;

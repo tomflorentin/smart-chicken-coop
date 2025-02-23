@@ -77,6 +77,7 @@ bool SafeConnection::needToSwitchToNormal() {
         }
     } else {
         if (now - this->lastScanTime > SCAN_INTERVAL) {
+            this->mqttClient.publish((this->name + "/wifi-scan").c_str(), "start");
             WiFi.scanNetworks(true);
             this->isScanning = true;
             this->lastScanTime = now;

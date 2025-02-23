@@ -1,7 +1,18 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { connect, MqttClient } from 'mqtt';
-import State, { AlertStatus, DoorStatus, FenceStatus } from '../state';
+import State, {
+  AlertStatus,
+  DoorStatus,
+  FenceOrder,
+  FenceStatus,
+} from '../state';
 import {
   addIntermediateStatusToTasksWithTopic,
   concludeTasksWithTopic,
@@ -9,6 +20,7 @@ import {
 import { Logs } from '../logs';
 import { Notify } from '../notify';
 import { capitalizeFirstLetter, sleep } from '../utils';
+import { TimerService } from '../timer/timer.service';
 
 export enum Topic {
   poulaillerPing = 'poulailler/ping',
@@ -35,7 +47,11 @@ export enum Topic {
 
 @Injectable()
 export class MqttService implements OnModuleInit {
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    @Inject(forwardRef(() => TimerService))
+    private readonly timerService: TimerService,
+  ) {}
 
   private mqttClient: MqttClient;
 
@@ -253,6 +269,12 @@ export class MqttService implements OnModuleInit {
       message.startsWith(FenceStatus.ENABLED) ||
       message.startsWith(FenceStatus.DISABLED)
     ) {
+      if (this.timerService.isAtNight()) {
+        setTimeout(async () => {
+          await this.publish(Topic.enclosFenceOrder, FenceOrder.ENABLE);
+          await Notify('⚡ Clôture électrique réactivée automatiquement');
+        }, 300 * 1000);
+      }
       concludeTasksWithTopic(Topic.enclosFence, message);
     }
     if (oldStatus === State.enclos.electricFence.status) return;
@@ -260,7 +282,9 @@ export class MqttService implements OnModuleInit {
       await Notify('⚡ Clôture électrique activée');
     }
     if (message.startsWith(FenceStatus.DISABLED)) {
-      await Notify('⚡ Clôture électrique désactivée');
+      await Notify(
+        `⚡ Clôture électrique désactivée ${this.timerService.isAtNight() ? 'de nuit pour 5min' : ''}`,
+      );
     }
   }
 

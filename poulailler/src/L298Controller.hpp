@@ -22,6 +22,7 @@ public:
     void setup() override;
     void suspendAction();
     void resumeAction();
+    bool getIsSuspended() const;
 
 
 private:
@@ -29,6 +30,7 @@ private:
     AnalogPinWriter pin2;
     uint8_t lastValue1 = 0;
     uint8_t lastValue2 = 0;
+    bool isSuspended = false;
 };
 
 
