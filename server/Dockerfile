@@ -25,7 +25,7 @@ USER node
 # BUILD FOR PRODUCTION
 ###################
 
-FROM node:18-alpine As build
+FROM node:20-alpine As build
 
 WORKDIR /usr/src/app
 

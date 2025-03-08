@@ -55,19 +55,21 @@ export class MqttService implements OnModuleInit {
 
   private mqttClient: MqttClient;
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  private listeningTopics: { name: string; handler: Function }[] = [
+  private listeningTopics: {
+    name: string;
+    handler: (m: string) => Promise<void> | void;
+  }[] = [
     {
       name: Topic.poulaillerDoorInfo,
-      handler: this.handlePoulaillerDoor.bind(this),
+      handler: (m: string) => this.handlePoulaillerDoor(m),
     },
     {
       name: Topic.enclosAlertInfo,
-      handler: this.handleEnclosAlert.bind(this),
+      handler: (m: string) => this.handleEnclosAlert(m),
     },
     {
       name: Topic.enclosFenceInfo,
-      handler: this.handleEnclosFence.bind(this),
+      handler: (m: string) => this.handleEnclosFence(m),
     },
     {
       name: Topic.poulaillerPong,
@@ -310,6 +312,10 @@ export class MqttService implements OnModuleInit {
       Logger.error('Error in connecting to CloudMQTT');
     });
 
+    this.mqttClient.on('reconnect', function () {
+      Logger.error('Reconnecting to CloudMQTT');
+    });
+
     this.mqttClient.on('message', (topic, message) => {
       const handler = this.listeningTopics.find(
         (t) => t.name === topic,
@@ -337,6 +343,12 @@ export class MqttService implements OnModuleInit {
   private lastMessageDate: Date = new Date();
 
   async publish(topic: Topic, payload: string): Promise<void> {
+    if (!this.mqttClient?.publish) {
+      await Notify('Erreur publish non définit');
+      console.log(this);
+      console.log(this.mqttClient);
+      return;
+    }
     Logs.push({
       date: new Date(),
       topic,
