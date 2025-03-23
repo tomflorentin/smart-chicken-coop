@@ -21,6 +21,7 @@ import { Logs } from '../logs';
 import { Notify } from '../notify';
 import { capitalizeFirstLetter, sleep } from '../utils';
 import { TimerService } from '../timer/timer.service';
+import { OnEvent } from '@nestjs/event-emitter';
 
 export enum Topic {
   poulaillerPing = 'poulailler/ping',
@@ -49,7 +50,6 @@ export enum Topic {
 export class MqttService implements OnModuleInit {
   constructor(
     private configService: ConfigService,
-    @Inject(forwardRef(() => TimerService))
     private readonly timerService: TimerService,
   ) {}
 
@@ -271,7 +271,10 @@ export class MqttService implements OnModuleInit {
       message.startsWith(FenceStatus.ENABLED) ||
       message.startsWith(FenceStatus.DISABLED)
     ) {
-      if (this.timerService.isAtNight()) {
+      if (
+        this.timerService.isAtNight() &&
+        message.startsWith(FenceStatus.DISABLED)
+      ) {
         setTimeout(async () => {
           await this.publish(Topic.enclosFenceOrder, FenceOrder.ENABLE);
           await Notify('⚡ Clôture électrique réactivée automatiquement');
@@ -373,5 +376,12 @@ export class MqttService implements OnModuleInit {
         () => null,
       );
     }
+  }
+
+  @OnEvent('publish')
+  async publishEvent(payload: { topic: Topic; message: string }) {
+    await this.publish(payload.topic, payload.message).catch((ex) =>
+      Notify('Erreur de publication ' + ex),
+    );
   }
 }

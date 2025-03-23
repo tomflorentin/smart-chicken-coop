@@ -16,13 +16,13 @@ import State, {
 } from '../state';
 import { ConfigService } from '@nestjs/config';
 import { sleep } from '../utils';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class TimerService implements OnModuleInit {
   constructor(
-    @Inject(forwardRef(() => MqttService))
-    private readonly mqttService: MqttService,
     private readonly configService: ConfigService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private closeTime: number;
@@ -182,10 +182,10 @@ export class TimerService implements OnModuleInit {
           "Le système a tenté d'ouvrir la porte a une heure dangereuse ! annulation de l'ouverture",
         );
       } else {
-        await this.mqttService.publish(
-          Topic.poulaillerDoorOrder,
-          DoorOrder.OPEN,
-        );
+        this.eventEmitter.emit('publish', {
+          topic: Topic.poulaillerDoorOrder,
+          message: DoorOrder.OPEN,
+        });
         notifs.push('🚪🕙Ouverture automatique de la porte');
       }
     } else {
@@ -208,16 +208,19 @@ export class TimerService implements OnModuleInit {
 
   private async closeRoutine(notifs: any[]) {
     if (State.poulailler.door.status !== DoorStatus.CLOSED) {
-      await this.mqttService.publish(
-        Topic.poulaillerDoorOrder,
-        DoorOrder.FORCE_CLOSE,
-      );
+      this.eventEmitter.emit('publish', {
+        topic: Topic.poulaillerDoorOrder,
+        message: DoorOrder.FORCE_CLOSE,
+      });
       notifs.push('🚪🕙Fermeture automatique de la porte');
     } else {
       Logger.log('Door already closed');
     }
     if (State.enclos.electricFence.status !== FenceStatus.ENABLED) {
-      await this.mqttService.publish(Topic.enclosFenceOrder, FenceOrder.ENABLE);
+      this.eventEmitter.emit('publish', {
+        topic: Topic.enclosFenceOrder,
+        message: FenceOrder.ENABLE,
+      });
       notifs.push('⚡🕙 Allumage automatique de la clôture électrique');
     } else {
       Logger.log('Electric Fence already enabled');
@@ -235,15 +238,21 @@ export class TimerService implements OnModuleInit {
   }
 
   async safetyCheck() {
-    await this.mqttService.publish(Topic.poulaillerDoorOrder, DoorOrder.STATUS);
-    await this.mqttService.publish(Topic.enclosFenceOrder, FenceOrder.STATUS);
+    this.eventEmitter.emit('publish', {
+      topic: Topic.poulaillerDoorOrder,
+      message: DoorOrder.STATUS,
+    });
+    this.eventEmitter.emit('publish', {
+      topic: Topic.enclosFenceOrder,
+      message: FenceOrder.STATUS,
+    });
     await sleep(10000);
     if (State.poulailler.door.status !== DoorStatus.CLOSED) {
       await Notify("⚠️ La porte n'est pas fermée ️");
-      await this.mqttService.publish(
-        Topic.poulaillerDoorOrder,
-        DoorOrder.FORCE_CLOSE,
-      );
+      this.eventEmitter.emit('publish', {
+        topic: Topic.poulaillerDoorOrder,
+        message: DoorOrder.FORCE_CLOSE,
+      });
     } else {
       await Notify(
         'Vérification du soir : La porte est correctement fermée ✅ Bonne nuit les poules 🐔',
@@ -253,7 +262,10 @@ export class TimerService implements OnModuleInit {
     // Electric fence
     if (State.enclos.electricFence.status !== FenceStatus.ENABLED) {
       await Notify("⚠️ La clôture électrique n'est pas activée ️");
-      await this.mqttService.publish(Topic.enclosFenceOrder, FenceOrder.ENABLE);
+      this.eventEmitter.emit('publish', {
+        topic: Topic.enclosFenceOrder,
+        message: FenceOrder.ENABLE,
+      });
     }
   }
 
