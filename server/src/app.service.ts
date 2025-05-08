@@ -109,4 +109,18 @@ export class AppService implements OnModuleInit {
     Tasks.push(new Task(Topic.poulaillerDoor, DoorOrder.OPEN));
     return this.mqttService.publish(Topic.poulaillerDoorOrder, DoorOrder.OPEN);
   }
+
+  forceMoveUpDoor() {
+    return this.mqttService.publish(
+      Topic.poulaillerDoorOrder,
+      DoorOrder.FORCE_MOVE_UP,
+    );
+  }
+
+  forceMoveDownDoor() {
+    return this.mqttService.publish(
+      Topic.poulaillerDoorOrder,
+      DoorOrder.FORCE_MOVE_DOWN,
+    );
+  }
 }

@@ -11,6 +11,7 @@
 #define CLOSE_TIMEOUT 8500
 #define CLOSE_SLOW 5500
 #define CLOSE_SLOW_SPEED 80
+#define FORCE_MOVE_TIME 1000
 
 DoorController::DoorController(MQTTServer &_server, uint8_t motorPin1, uint8_t motorPin2, uint8_t closedLimitSwitchPin,
                                uint8_t openedLimitSwitchPin, uint8_t laserEmitPin, uint8_t laserReceivePin)
@@ -98,9 +99,24 @@ void DoorController::executeOrder(Order order) {
         this->orderStartTime = millis();
     }
     switch (order) {
+        case Order::FORCE_MOVE_UP:
+            Log("Force move up");
+            this->motor.backward(255);
+            delay(FORCE_MOVE_TIME);
+            this->motor.standby();
+            this->readLimitsAndSendStatus();
+            break;
+        case Order::FORCE_MOVE_DOWN:
+            Log("Force move down");
+            this->motor.forward(255);
+            delay(FORCE_MOVE_TIME);
+            this->motor.standby();
+            this->readLimitsAndSendStatus();
+            break;
         case Order::OPEN_DOOR:
             Log("Opening door");
             if (openedLimitSwitch.read()) {
+                Log("Already opened");
                 this->lastOrderStatus = LastOrderStatus::ERROR_ALREADY_SAME_STATE;
             } else {
                 this->status = DoorStatus::OPENING;
@@ -112,6 +128,7 @@ void DoorController::executeOrder(Order order) {
         case Order::SAFE_CLOSE_DOOR:
             Log("Closing door");
             if (closedLimitSwitch.read()) {
+                Log("Already closed");
                 lastOrderStatus = LastOrderStatus::ERROR_ALREADY_SAME_STATE;
             } else if (!laserSafety.startLaser()) {
                 lastOrderStatus = LastOrderStatus::ERROR_BLOCKED;
@@ -187,4 +204,16 @@ String DoorController::doorStatusToString(DoorStatus status) {
         default:
             return "unknown";
     }
+}
+
+void DoorController::readLimitsAndSendStatus() {
+    if (this->closedLimitSwitch.read()) {
+        this->status = DoorStatus::CLOSED;
+    } else if (this->openedLimitSwitch.read()) {
+        this->status = DoorStatus::OPENED;
+    } else {
+        this->status = DoorStatus::BLOCKED;
+    }
+
+    this->server.publish("poulailler/door/info", DoorController::doorStatusToString(this->status).c_str());
 }

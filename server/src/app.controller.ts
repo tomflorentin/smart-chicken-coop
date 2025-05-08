@@ -49,6 +49,16 @@ export class AppController {
     return this.appService.forceCloseDoor();
   }
 
+  @Post('door/force-move-up')
+  forceMoveUpDoor() {
+    return this.appService.forceMoveUpDoor();
+  }
+
+  @Post('door/force-move-down')
+  forceMoveDownDoor() {
+    return this.appService.forceMoveDownDoor();
+  }
+
   @Post('fence/enable')
   enableFence() {
     return this.appService.enableFence();

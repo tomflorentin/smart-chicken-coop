@@ -15,6 +15,8 @@ export enum DoorOrder {
   FORCE_CLOSE = 'force_close',
   OPEN = 'open',
   STATUS = 'status',
+  FORCE_MOVE_UP = 'force_move_up',
+  FORCE_MOVE_DOWN = 'force_move_down',
 }
 
 export enum DoorStatus {

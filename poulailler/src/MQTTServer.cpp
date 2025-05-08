@@ -38,8 +38,12 @@ void MQTTServer::handleCallback(char *topic, byte *payload, unsigned int length)
             lastOrder = Order::SAFE_CLOSE_DOOR;
         } else if (!strcmp(message.c_str(), "status")) {
             lastOrder = Order::STATUS_DOOR;
+        } else if (!strcmp(message.c_str(), "force_move_up")) {
+            lastOrder = Order::FORCE_MOVE_UP;
+        } else if (!strcmp(message.c_str(), "force_move_down")) {
+            lastOrder = Order::FORCE_MOVE_DOWN;
         } else {
-            this->publish("enclos/fence/info", "bad request");
+            this->publish("poulailler/door/info", "bad request");
         }
     } else if (!strcmp(topic, "poulailler/ping")) {
         this->publish("poulailler/pong", "pong");

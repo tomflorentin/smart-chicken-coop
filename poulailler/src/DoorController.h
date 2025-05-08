@@ -26,6 +26,7 @@ public:
     void executeOrder(Order order);
     DoorStatus getStatus() const;
     LastOrderStatus getLastOrderStatus() const;
+    void readLimitsAndSendStatus();
 
 private:
     LaserSafety laserSafety;

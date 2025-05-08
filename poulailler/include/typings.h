@@ -34,6 +34,8 @@ enum Order : uint8_t {
     FORCE_CLOSE_DOOR = 3,
     STATUS_DOOR = 4,
     PING = 5,
+    FORCE_MOVE_UP = 6,
+    FORCE_MOVE_DOWN = 7,
 };
 
 struct Infos {
