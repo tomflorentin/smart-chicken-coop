@@ -75,14 +75,6 @@ String WebServer::handleRequest(const String &request) {
     if (request.indexOf("GET /logs") != -1) {
         return "{ \"status\": \"accepted\", \"logs\": " + getJsonLogs() + " }";
     }
-    else if (request.indexOf("GET /action/alert/enable") != -1) {
-        this->action = ENABLE_ALERT;
-        return standard_accepted;
-    }
-    else if (request.indexOf("GET /action/alert/disable") != -1) {
-        this->action = DISABLE_ALERT;
-        return standard_accepted;
-    }
     else if (request.indexOf("GET /action/fence/enable") != -1) {
         this->action = ENABLE_ELECTRIC_FENCE;
         return standard_accepted;

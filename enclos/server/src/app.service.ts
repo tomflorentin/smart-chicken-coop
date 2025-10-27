@@ -67,7 +67,7 @@ export class AppService implements OnModuleInit {
   }
 
   forceCloseDoor() {
-    Tasks.push(new Task(Topic.poulaillerDoor, DoorOrder.FORCE_CLOSE));
+    Tasks.push(new Task(Topic.poulaillerDoorOrder, DoorOrder.FORCE_CLOSE));
     return this.mqttService.publish(
       Topic.poulaillerDoorOrder,
       DoorOrder.FORCE_CLOSE,
@@ -75,7 +75,7 @@ export class AppService implements OnModuleInit {
   }
 
   safeCloseDoor() {
-    Tasks.push(new Task(Topic.poulaillerDoor, DoorOrder.SAFE_CLOSE));
+    Tasks.push(new Task(Topic.poulaillerDoorOrder, DoorOrder.SAFE_CLOSE));
     return this.mqttService.publish(
       Topic.poulaillerDoorOrder,
       DoorOrder.SAFE_CLOSE,
@@ -83,7 +83,7 @@ export class AppService implements OnModuleInit {
   }
 
   openDoor() {
-    Tasks.push(new Task(Topic.poulaillerDoor, DoorOrder.OPEN));
+    Tasks.push(new Task(Topic.poulaillerDoorOrder, DoorOrder.OPEN));
     return this.mqttService.publish(Topic.poulaillerDoorOrder, DoorOrder.OPEN);
   }
 }

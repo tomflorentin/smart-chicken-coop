@@ -36,13 +36,13 @@ void MQTTServer::handleCallback(char *topic, byte *payload, unsigned int length)
             this->publish("enclos/fence/info", "bad request");
         }
     }
-    else if (!strcmp(topic, "enclos/alert/order")) {
-        if (!strcmp(message.c_str(), "enable")) {
-            lastOrder = Order::ENABLE_ALERT;
-        } else if (!strcmp(message.c_str(), "disable")) {
-            lastOrder = Order::DISABLE_ALERT;
+    else if (!strcmp(topic, "enclos/door/order")) {
+        if (!strcmp(message.c_str(), "close")) {
+            lastOrder = Order::DOOR_CLOSE;
+        } else if (!strcmp(message.c_str(), "open")) {
+            lastOrder = Order::DOOR_OPEN;
         } else if (!strcmp(message.c_str(), "status")) {
-            lastOrder = Order::STATUS_ALERT;
+            lastOrder = Order::STATUS_DOOR;
         } else {
             this->publish("enclos/alert/info", "bad request");
         }

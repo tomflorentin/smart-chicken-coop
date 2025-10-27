@@ -13,9 +13,6 @@
 #include "PinReader/DigitalPinReader.hpp"
 #include "PinReader/LongDigitalPinReader.h"
 
-#define PULSE_DURATION 500
-#define PULSE_INTERVAL 2500
-
 class ElectricFence : ISetupable {
 public:
     explicit ElectricFence(MQTTServer &_server, uint8_t _relayPin, uint8_t _manualSwitch, uint8_t _infoLedR, uint8_t _infoLedG);

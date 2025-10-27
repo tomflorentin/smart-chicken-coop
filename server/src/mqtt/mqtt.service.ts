@@ -1,10 +1,4 @@
-import {
-  forwardRef,
-  Inject,
-  Injectable,
-  Logger,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { connect, MqttClient } from 'mqtt';
 import State, {
@@ -278,7 +272,7 @@ export class MqttService implements OnModuleInit {
         setTimeout(async () => {
           await this.publish(Topic.enclosFenceOrder, FenceOrder.ENABLE);
           await Notify('⚡ Clôture électrique réactivée automatiquement');
-        }, 300 * 1000);
+        }, 900 * 1000);
       }
       concludeTasksWithTopic(Topic.enclosFence, message);
     }
@@ -288,7 +282,7 @@ export class MqttService implements OnModuleInit {
     }
     if (message.startsWith(FenceStatus.DISABLED)) {
       await Notify(
-        `⚡ Clôture électrique désactivée ${this.timerService.isAtNight() ? 'de nuit pour 5min' : ''}`,
+        `⚡ Clôture électrique désactivée ${this.timerService.isAtNight() ? 'de nuit pour 15min' : ''}`,
       );
     }
   }

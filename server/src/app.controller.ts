@@ -39,14 +39,9 @@ export class AppController {
     return this.appService.openDoor();
   }
 
-  @Post('door/safe-close')
+  @Post('door/close')
   safeCloseDoor() {
-    return this.appService.safeCloseDoor();
-  }
-
-  @Post('door/force-close')
-  forceCloseDoor() {
-    return this.appService.forceCloseDoor();
+    return this.appService.closeDoor();
   }
 
   @Post('door/force-move-up')

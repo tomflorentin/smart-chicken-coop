@@ -10,10 +10,9 @@ import {
 import { Logs } from '../logs';
 
 export enum Topic {
-  poulaillerPing = 'poulailler/ping',
-  poulaillerDoor = 'poulailler/door',
-  poulaillerDoorOrder = 'poulailler/door/order',
-  poulaillerDoorInfo = 'poulailler/door/info',
+  poulaillerDoor = 'enclos/door',
+  poulaillerDoorOrder = 'enclos/door/order',
+  poulaillerDoorInfo = 'enclos/door/info',
   enclosPing = 'enclos/ping',
   enclosFence = 'enclos/fence',
   enclosFenceOrder = 'enclos/fence/order',

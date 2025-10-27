@@ -11,8 +11,7 @@ export enum AlertOrder {
 }
 
 export enum DoorOrder {
-  SAFE_CLOSE = 'safe_close',
-  FORCE_CLOSE = 'force_close',
+  CLOSE = 'close',
   OPEN = 'open',
   STATUS = 'status',
   FORCE_MOVE_UP = 'force_move_up',

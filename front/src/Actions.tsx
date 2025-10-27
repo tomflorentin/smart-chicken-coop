@@ -12,11 +12,11 @@ interface ActionProps {
 const Actions: React.FC<ActionProps> = ({ orderSent }) => {
     const actions = [
         { name: 'Ouvrir', endpoint: 'door/open', icon: "pi-lock-open" },
-        { name: 'Fermer', endpoint: 'door/force-close', icon: "pi-lock" },
+        { name: 'Fermer', endpoint: 'door/close', icon: "pi-lock" },
         { name: 'Activer la clôture', endpoint: 'fence/enable', icon: "pi-bolt" },
         { name: 'Désactiver la clôture', endpoint: 'fence/disable', icon: "pi-bolt" },
-        { name: 'Activer l\'alerte', endpoint: 'alert/enable', icon: "pi-bell" },
-        { name: 'Désactiver l\'alerte', endpoint: 'alert/disable', icon: "pi-bell" },
+        // { name: 'Activer l\'alerte', endpoint: 'alert/enable', icon: "pi-bell" },
+        // { name: 'Désactiver l\'alerte', endpoint: 'alert/disable', icon: "pi-bell" },
         { name: 'Actualiser les horaires', endpoint: 'timer', icon: "pi-clock" },
         { name: 'Monter la porte (1s)', endpoint: 'door/force-move-up', icon: "pi-angle-up" },
         { name: 'Descendre la porte (1s)', endpoint: 'door/force-move-down', icon: "pi-angle-down" },

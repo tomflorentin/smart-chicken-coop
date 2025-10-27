@@ -11,9 +11,8 @@
 enum DoorStatus {
     OPENED = 1,
     CLOSED = 2,
-    SAFE_CLOSING = 3,
+    CLOSING = 3,
     OPENING = 4,
-    FORCE_CLOSING = 5,
 };
 
 enum LastOrderStatus {
@@ -27,9 +26,9 @@ enum LastOrderStatus {
 
 enum Order : uint8_t {
     NONE = 0,
-    ENABLE_ALERT = 1,
-    DISABLE_ALERT = 2,
-    STATUS_ALERT = 3,
+    DOOR_OPEN = 1,
+    DOOR_CLOSE = 2,
+    STATUS_DOOR = 3,
     ENABLE_ELECTRIC_FENCE = 4,
     DISABLE_ELECTRIC_FENCE = 5,
     STATUS_ELECTRIC_FENCE = 6,

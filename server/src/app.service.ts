@@ -89,20 +89,9 @@ export class AppService implements OnModuleInit {
     return this.mqttService.publish(Topic.enclosFenceOrder, FenceOrder.ENABLE);
   }
 
-  forceCloseDoor() {
-    Tasks.push(new Task(Topic.poulaillerDoor, DoorOrder.FORCE_CLOSE));
-    return this.mqttService.publish(
-      Topic.poulaillerDoorOrder,
-      DoorOrder.FORCE_CLOSE,
-    );
-  }
-
-  safeCloseDoor() {
-    Tasks.push(new Task(Topic.poulaillerDoor, DoorOrder.SAFE_CLOSE));
-    return this.mqttService.publish(
-      Topic.poulaillerDoorOrder,
-      DoorOrder.SAFE_CLOSE,
-    );
+  closeDoor() {
+    Tasks.push(new Task(Topic.poulaillerDoor, DoorOrder.CLOSE));
+    return this.mqttService.publish(Topic.poulaillerDoorOrder, DoorOrder.CLOSE);
   }
 
   openDoor() {

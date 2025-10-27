@@ -210,7 +210,7 @@ export class TimerService implements OnModuleInit {
     if (State.poulailler.door.status !== DoorStatus.CLOSED) {
       this.eventEmitter.emit('publish', {
         topic: Topic.poulaillerDoorOrder,
-        message: DoorOrder.FORCE_CLOSE,
+        message: DoorOrder.CLOSE,
       });
       notifs.push('🚪🕙Fermeture automatique de la porte');
     } else {
@@ -251,7 +251,7 @@ export class TimerService implements OnModuleInit {
       await Notify("⚠️ La porte n'est pas fermée ️");
       this.eventEmitter.emit('publish', {
         topic: Topic.poulaillerDoorOrder,
-        message: DoorOrder.FORCE_CLOSE,
+        message: DoorOrder.CLOSE,
       });
     } else {
       await Notify(
