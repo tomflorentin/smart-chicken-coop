@@ -10,7 +10,7 @@
 void MQTTServer::setup() {
     this->safeConnection.addTopic("enclos/ping");
     this->safeConnection.addTopic("enclos/fence/order");
-    this->safeConnection.addTopic("enclos/alert/order");
+    this->safeConnection.addTopic("enclos/door/order");
     this->safeConnection.setCallback([this](char* topic, byte* payload, unsigned int length) {
         this->handleCallback(topic, payload, length);
     });

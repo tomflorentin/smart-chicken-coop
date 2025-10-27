@@ -7,7 +7,7 @@
 MQTTServer server;
 //AlertSystem alertSystem(server, 2, 21, 19);
 ElectricFence electricFence(server, 18, 22, 17, 16);
-V2Door door(server, 5, 4);
+V2Door door(server, 14, 27);
 
 void setup() {
     Serial.begin(9600);
