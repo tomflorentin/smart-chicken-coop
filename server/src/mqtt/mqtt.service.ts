@@ -1,32 +1,21 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { connect, MqttClient } from 'mqtt';
-import State, {
-  AlertStatus,
-  DoorStatus,
-  FenceOrder,
-  FenceStatus,
-} from '../state';
+import State, { AlertStatus, DoorOrder, DoorStatus, FenceOrder, FenceStatus } from '../state';
 import {
   addIntermediateStatusToTasksWithTopic,
   concludeTasksWithTopic,
 } from '../tasks';
 import { Logs } from '../logs';
 import { Notify } from '../notify';
-import { capitalizeFirstLetter, sleep } from '../utils';
+import { sleep } from '../utils';
 import { TimerService } from '../timer/timer.service';
 import { OnEvent } from '@nestjs/event-emitter';
 
 export enum Topic {
-  poulaillerPing = 'poulailler/ping',
-  poulaillerPong = 'poulailler/pong',
-  poulaillerWifi = 'poulailler/wifi',
-  poulaillerBoot = 'poulailler/boot',
-  poulaillerDoor = 'enclos/door',
-  poulaillerDoorOrder = 'enclos/door/order',
-  poulaillerDoorInfo = 'enclos/door/info',
-  poulaillerTemperature = 'poulailler/temperature',
-  poulaillerHumidity = 'poulailler/humidity',
+  door = 'enclos/door',
+  doorOrder = 'enclos/door/order',
+  doorInfo = 'enclos/door/info',
   enclosPing = 'enclos/ping',
   enclosPong = 'enclos/pong',
   enclosWifi = 'enclos/wifi',
@@ -54,8 +43,8 @@ export class MqttService implements OnModuleInit {
     handler: (m: string) => Promise<void> | void;
   }[] = [
     {
-      name: Topic.poulaillerDoorInfo,
-      handler: (m: string) => this.handlePoulaillerDoor(m),
+      name: Topic.doorInfo,
+      handler: (m: string) => this.handleDoor(m),
     },
     {
       name: Topic.enclosAlertInfo,
@@ -66,17 +55,10 @@ export class MqttService implements OnModuleInit {
       handler: (m: string) => this.handleEnclosFence(m),
     },
     {
-      name: Topic.poulaillerPong,
-      handler: () => {
-        Logger.log('Poulailler pong received');
-        this.updateLastSeen('poulailler');
-      },
-    },
-    {
       name: Topic.enclosPong,
       handler: () => {
         Logger.log('Enclos pong received');
-        this.updateLastSeen('enclos');
+        this.updateLastSeen();
       },
     },
     {
@@ -94,18 +76,8 @@ export class MqttService implements OnModuleInit {
         State.enclos.online = true;
         this.publish(Topic.enclosFenceOrder, 'status');
         this.publish(Topic.enclosAlertOrder, 'status');
+        this.publish(Topic.doorOrder, DoorOrder.STATUS);
         await Notify('🧱 Enclos démarré');
-      },
-    },
-    {
-      name: Topic.poulaillerBoot,
-      handler: async () => {
-        Logger.log('Poulailler boot received');
-        State.poulailler.lastSeen = new Date();
-        State.poulailler.bootTime = new Date();
-        State.poulailler.online = true;
-        this.publish(Topic.poulaillerDoorOrder, 'status');
-        await Notify('🏠 Poulailler démarré');
       },
     },
     {
@@ -118,81 +90,29 @@ export class MqttService implements OnModuleInit {
           void Notify('📶 Enclos revenu sur le wifi normal').catch(() => null);
         }
         State.enclos.wifi = value;
-        this.updateLastSeen('enclos');
-      },
-    },
-    {
-      name: Topic.poulaillerWifi,
-      handler: (value: 'normal' | 'backup') => {
-        Logger.log('Poulailler wifi received ' + value);
-        if (value === 'backup' && State.poulailler.wifi !== 'backup') {
-          void Notify('📶 Poulailler sur le wifi backup').catch(() => null);
-        } else if (value === 'normal' && State.poulailler.wifi !== 'normal') {
-          void Notify('📶 Poulailler revenu sur le wifi normal').catch(
-            () => null,
-          );
-        }
-        State.poulailler.wifi = value;
-        this.updateLastSeen('poulailler');
-      },
-    },
-    {
-      name: Topic.poulaillerTemperature,
-      handler: (value: string) => {
-        Logger.log('Poulailler temperature received ' + value);
-        this.assignValueMinAndMax('temperature', value);
-        this.updateLastSeen('poulailler');
-      },
-    },
-    {
-      name: Topic.poulaillerHumidity,
-      handler: (value: string) => {
-        Logger.log('Poulailler humidity received ' + value);
-        this.assignValueMinAndMax('humidity', value);
-        this.updateLastSeen('poulailler');
+        this.updateLastSeen();
       },
     },
   ];
 
-  private assignValueMinAndMax(property: string, valueStr: string) {
-    const value = parseFloat(valueStr);
-    if (isNaN(value)) {
-      Logger.error('Invalid value received ' + valueStr);
-      return;
-    }
-    State.poulailler[property] = value;
-    if (State.poulailler[`min${capitalizeFirstLetter(property)}`] === null) {
-      State.poulailler[`min${capitalizeFirstLetter(property)}`] = value;
-    } else {
-      State.poulailler[`min${capitalizeFirstLetter(property)}`] = Math.min(
-        State.poulailler[`min${capitalizeFirstLetter(property)}`],
-        value,
-      );
-    }
-    State.poulailler[`max${capitalizeFirstLetter(property)}`] = Math.max(
-      State.poulailler[`max${capitalizeFirstLetter(property)}`],
-      value,
-    );
-  }
-
-  private async handlePoulaillerDoor(message: string) {
-    const oldStatus = State.poulailler.door.status;
+  private async handleDoor(message: string) {
+    const oldStatus = State.enclos.door.status;
     console.log('door', message);
-    this.updateLastSeen('poulailler');
+    this.updateLastSeen();
     if (message.startsWith('status-response')) {
-      State.poulailler.door.status = message.split(' ')[1] as DoorStatus;
+      State.enclos.door.status = message.split(' ')[1] as DoorStatus;
       return;
     }
-    State.poulailler.door.status = message as DoorStatus;
+    State.enclos.door.status = message as DoorStatus;
     if (
       message.startsWith(DoorStatus.OPENED) ||
-      message.startsWith(DoorStatus.OPENED)
+      message.startsWith(DoorStatus.CLOSED)
     ) {
-      concludeTasksWithTopic(Topic.poulaillerDoor, message);
+      concludeTasksWithTopic(Topic.door, message);
     } else {
-      addIntermediateStatusToTasksWithTopic(Topic.poulaillerDoor, message);
+      addIntermediateStatusToTasksWithTopic(Topic.door, message);
     }
-    if (oldStatus === State.poulailler.door.status) return;
+    if (oldStatus === State.enclos.door.status) return;
     if (message.startsWith(DoorStatus.BLOCKED)) {
       await Notify('❌ Porte bloquée !');
     }
@@ -210,7 +130,7 @@ export class MqttService implements OnModuleInit {
   private async handleEnclosAlert(message: string) {
     const oldStatus = State.enclos.alertSystem.status;
     console.log('alert', message);
-    this.updateLastSeen('enclos');
+    this.updateLastSeen();
     if (message.startsWith('status-response')) {
       State.enclos.alertSystem.status = message.split(' ')[1] as AlertStatus;
       return;
@@ -360,15 +280,13 @@ export class MqttService implements OnModuleInit {
     this.mqttClient.publish(topic, payload);
   }
 
-  private updateLastSeen(type: 'enclos' | 'poulailler') {
+  private updateLastSeen() {
     const now = new Date();
-    State[type].lastSeen = now;
-    if (!State[type].online) {
-      State[type].online = true;
-      State[type].bootTime = now;
-      void Notify(`${type === 'enclos' ? '🧱' : '🏠'} ${type} connecté`).catch(
-        () => null,
-      );
+    State.enclos.lastSeen = now;
+    if (!State.enclos.online) {
+      State.enclos.online = true;
+      State.enclos.bootTime = now;
+      void Notify('🧱 Enclos connecté').catch(() => null);
     }
   }
 

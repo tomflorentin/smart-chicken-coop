@@ -176,14 +176,14 @@ export class TimerService implements OnModuleInit {
 
   private async openRoutine(notifs: any[]) {
     const currentFractionOfDay = this.getCurrentFractionOfDay();
-    if (State.poulailler.door.status !== DoorStatus.OPENED) {
+    if (State.enclos.door.status !== DoorStatus.OPENED) {
       if (currentFractionOfDay > 0.9 || currentFractionOfDay < 0.25) {
         await Notify(
           "Le système a tenté d'ouvrir la porte a une heure dangereuse ! annulation de l'ouverture",
         );
       } else {
         this.eventEmitter.emit('publish', {
-          topic: Topic.poulaillerDoorOrder,
+          topic: Topic.doorOrder,
           message: DoorOrder.OPEN,
         });
         notifs.push('🚪🕙Ouverture automatique de la porte');
@@ -200,16 +200,12 @@ export class TimerService implements OnModuleInit {
     // } else {
     //   Logger.log('Alert system already disabled');
     // }
-    notifs.push(
-      `🌡️ La temperature minimale cette nuit a été de ${State.poulailler.minTemperature}°C`,
-    );
-    State.poulailler.minTemperature = null;
   }
 
   private async closeRoutine(notifs: any[]) {
-    if (State.poulailler.door.status !== DoorStatus.CLOSED) {
+    if (State.enclos.door.status !== DoorStatus.CLOSED) {
       this.eventEmitter.emit('publish', {
-        topic: Topic.poulaillerDoorOrder,
+        topic: Topic.doorOrder,
         message: DoorOrder.CLOSE,
       });
       notifs.push('🚪🕙Fermeture automatique de la porte');
@@ -231,15 +227,11 @@ export class TimerService implements OnModuleInit {
     // } else {
     //   Logger.log('Alert system already enabled');
     // }
-    notifs.push(
-      `🌡️ La temperature maximale aujourd'hui a été de ${State.poulailler.maxTemperature}°C`,
-    );
-    State.poulailler.maxTemperature = null;
   }
 
   async safetyCheck() {
     this.eventEmitter.emit('publish', {
-      topic: Topic.poulaillerDoorOrder,
+      topic: Topic.doorOrder,
       message: DoorOrder.STATUS,
     });
     this.eventEmitter.emit('publish', {
@@ -247,10 +239,10 @@ export class TimerService implements OnModuleInit {
       message: FenceOrder.STATUS,
     });
     await sleep(10000);
-    if (State.poulailler.door.status !== DoorStatus.CLOSED) {
+    if (State.enclos.door.status !== DoorStatus.CLOSED) {
       await Notify("⚠️ La porte n'est pas fermée ️");
       this.eventEmitter.emit('publish', {
-        topic: Topic.poulaillerDoorOrder,
+        topic: Topic.doorOrder,
         message: DoorOrder.CLOSE,
       });
     } else {

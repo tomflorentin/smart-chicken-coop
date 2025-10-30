@@ -2,7 +2,6 @@ import React from 'react';
 import { Card } from 'primereact/card';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Badge } from 'primereact/badge';
-import { Tooltip } from 'primereact/tooltip';
 
 export enum FenceOrder {
     ENABLE = 'enable',
@@ -17,9 +16,8 @@ export enum AlertOrder {
 }
 
 export enum DoorOrder {
-    SAFE_CLOSE = 'door_safe_close',
-    FORCE_CLOSE = 'door_force_close',
-    OPEN = 'door_open',
+    CLOSE = 'close',
+    OPEN = 'open',
     STATUS = 'status',
 }
 
@@ -54,6 +52,11 @@ export interface StateType {
         wifi: 'normal' | 'backup' | null;
         bootTime: Date;
         lastSeen: Date;
+        door: {
+            lastOrder: DoorOrder;
+            lastOrderDate: Date;
+            status: DoorStatus;
+        };
         electricFence: {
             lastOrder: FenceOrder;
             lastOrderDate: Date;
@@ -66,23 +69,6 @@ export interface StateType {
             lastOrder: AlertOrder;
             lastOrderDate: Date;
             detections: Detections;
-        };
-    };
-    poulailler: {
-        online: boolean;
-        wifi: 'normal' | 'backup' | null;
-        bootTime: Date;
-        lastSeen: Date;
-        temperature: number;
-        minTemperature: number;
-        maxTemperature: number;
-        humidity: number;
-        minHumidity: number;
-        maxHumidity: number;
-        door: {
-            lastOrder: DoorOrder;
-            lastOrderDate: Date;
-            status: DoorStatus;
         };
     };
 }
@@ -189,58 +175,39 @@ const ChickenCoop: React.FC<{ state: StateType | null }> = ({ state }) => {
         return `${hours}h ${minutes}m`;
     };
 
-    if (!state?.enclos || !state?.poulailler) {
+    if (!state?.enclos) {
         return <p>"Chargement..."</p>;
     }
 
-    const doorConnection = getConnectionStatus(state.poulailler.lastSeen, state.poulailler.bootTime);
-    const fenceConnection = getConnectionStatus(state.enclos.lastSeen, state.enclos.bootTime);
+    const enclosConnection = getConnectionStatus(state.enclos.lastSeen, state.enclos.bootTime);
 
     return (
         <div className="p-d-flex p-flex-column p-jc-center p-ai-center" style={{ padding: '1rem', overflowX: 'hidden', width: '100%' }}>
-            {/* Section Poulailler */}
-            <Card header="Poulailler" className="p-mb-3" style={{marginBottom: 16}}>
+            <Card header="Enclos" className="p-mb-3">
                 <p>
-                    <i className={`pi ${doorConnection.severity === 'danger' ? 'pi-times-circle' : 'pi-check-circle'} p-mr-2`} style={{ color: doorConnection.severity === 'danger' ? 'red' : 'green' }} />
-                    {doorConnection.status} {doorConnection.duration}
+                    <i className={`pi ${enclosConnection.severity === 'danger' ? 'pi-times-circle' : 'pi-check-circle'} p-mr-2`} style={{ color: enclosConnection.severity === 'danger' ? 'red' : 'green' }} />
+                    {enclosConnection.status} {enclosConnection.duration}
                 </p>
-                <p>
+                <div>
                     <i className="pi pi-door p-mr-2" />
-                    Porte: {getDoorBadge(state.poulailler.door.status)}
-                </p>
-                {isDoorMoving(state.poulailler.door.status) && (
+                    Porte: {getDoorBadge(state.enclos.door.status)}
+                </div>
+                {isDoorMoving(state.enclos.door.status) && (
                     <div className="p-d-flex p-ai-center p-mt-2">
                         <ProgressSpinner style={{ width: '2rem', height: '2rem' }} />
                         <span className="p-ml-2">Porte en cours de mouvement...</span>
                     </div>
                 )}
-                <Tooltip target=".door-icon" content={`Dernière connexion : ${formatLastSeen(state.poulailler.lastSeen)}`} />
-                <p>Wifi {state.poulailler.wifi}</p>
-                <p>Temperature {state.poulailler.temperature}°C (min {state.poulailler.minTemperature}° / max {state.poulailler.maxTemperature}°)</p>
-                <p>Humidité {state.poulailler.humidity}% (min {state.poulailler.minHumidity}% / max {state.poulailler.maxHumidity}%)</p>
-            </Card>
-
-            {/* Section Enclos */}
-            <Card header="Enclos" className="p-mb-3">
-                <div>
-                    <i className={`pi ${fenceConnection.severity === 'danger' ? 'pi-times-circle' : 'pi-check-circle'} p-mr-2`}
-                       style={{color: fenceConnection.severity === 'danger' ? 'red' : 'green'}}/>
-                    {fenceConnection.status} {fenceConnection.duration}
-                </div>
-                <div>
-                    <i className="pi pi-bolt p-mr-2"/>
+                <p>Dernière connexion : {formatLastSeen(state.enclos.lastSeen)}</p>
+                <p>Wifi {state.enclos.wifi}</p>
+                <div className="p-mt-3">
+                    <i className="pi pi-bolt p-mr-2" />
                     Clôture électrique: {getFenceBadge(state.enclos.electricFence.status)}
                 </div>
-                <Tooltip target=".fence-icon"
-                         content={`Dernière connexion : ${formatLastSeen(state.enclos.lastSeen)}`}/>
-
-                <div>
-                    <i className="pi pi-exclamation-circle p-mr-2"/>
-                    Système
-                    d'alerte: {getAlertBadge(state.enclos.alertSystem.status, state.enclos.alertSystem.detections)}
+                <div className="p-mt-2">
+                    <i className="pi pi-exclamation-circle p-mr-2" />
+                    Système d'alerte: {getAlertBadge(state.enclos.alertSystem.status, state.enclos.alertSystem.detections)}
                 </div>
-                <p>Wifi {state.enclos.wifi}</p>
-
             </Card>
         </div>
     );

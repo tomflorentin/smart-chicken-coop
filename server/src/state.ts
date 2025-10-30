@@ -14,8 +14,6 @@ export enum DoorOrder {
   CLOSE = 'close',
   OPEN = 'open',
   STATUS = 'status',
-  FORCE_MOVE_UP = 'force_move_up',
-  FORCE_MOVE_DOWN = 'force_move_down',
 }
 
 export enum DoorStatus {
@@ -53,6 +51,11 @@ export interface StateType {
     wifi: 'normal' | 'backup' | null;
     bootTime: Date;
     lastSeen: Date;
+    door: {
+      lastOrder: DoorOrder;
+      lastOrderDate: Date;
+      status: DoorStatus;
+    };
     electricFence: {
       lastOrder: FenceOrder;
       lastOrderDate: Date;
@@ -67,23 +70,6 @@ export interface StateType {
       detections: Detections;
     };
   };
-  poulailler: {
-    online: boolean;
-    wifi: 'normal' | 'backup' | null;
-    bootTime: Date;
-    lastSeen: Date;
-    temperature: number;
-    minTemperature: number;
-    maxTemperature: number;
-    humidity: number;
-    minHumidity: number;
-    maxHumidity: number;
-    door: {
-      lastOrder: DoorOrder;
-      lastOrderDate: Date;
-      status: DoorStatus;
-    };
-  };
 }
 
 const State: StateType = {
@@ -92,6 +78,11 @@ const State: StateType = {
     bootTime: null,
     online: false,
     wifi: null,
+    door: {
+      lastOrder: null,
+      lastOrderDate: null,
+      status: null,
+    },
     electricFence: {
       lastOrder: null,
       lastOrderDate: null,
@@ -108,23 +99,6 @@ const State: StateType = {
         timeInAlert: 0,
         lastDetection: null,
       },
-    },
-  },
-  poulailler: {
-    online: false,
-    wifi: null,
-    bootTime: null,
-    lastSeen: null,
-    humidity: null,
-    minHumidity: null,
-    maxHumidity: null,
-    temperature: null,
-    minTemperature: null,
-    maxTemperature: null,
-    door: {
-      lastOrder: null,
-      lastOrderDate: null,
-      status: null,
     },
   },
 };

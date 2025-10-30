@@ -26,12 +26,6 @@ export class AppService implements OnModuleInit {
 
     // Pings
     if (
-      !State.poulailler.lastSeen ||
-      nowMs - +State.poulailler.lastSeen > secondsBeforePing * 1000
-    ) {
-      await this.mqttService.publish(Topic.poulaillerPing, 'ping');
-    }
-    if (
       !State.enclos.lastSeen ||
       nowMs - +State.enclos.lastSeen > secondsBeforePing * 1000
     ) {
@@ -45,21 +39,10 @@ export class AppService implements OnModuleInit {
       State.enclos.online = false;
       await Notify('💔 Enclos déconnecté');
     }
-    if (
-      State.poulailler.lastSeen &&
-      State.poulailler.online &&
-      nowMs - +State.poulailler.lastSeen > secondsBeforeDisconnected * 1000
-    ) {
-      State.poulailler.online = false;
-      await Notify('💔 Poulailler déconnecté');
-    }
 
     // Statuses
-    if (!State.poulailler.door.status) {
-      await this.mqttService.publish(
-        Topic.poulaillerDoorOrder,
-        DoorOrder.STATUS,
-      );
+    if (!State.enclos.door.status) {
+      await this.mqttService.publish(Topic.doorOrder, DoorOrder.STATUS);
     }
     if (!State.enclos.electricFence.status) {
       await this.mqttService.publish(Topic.enclosFenceOrder, FenceOrder.STATUS);
@@ -90,26 +73,12 @@ export class AppService implements OnModuleInit {
   }
 
   closeDoor() {
-    Tasks.push(new Task(Topic.poulaillerDoor, DoorOrder.CLOSE));
-    return this.mqttService.publish(Topic.poulaillerDoorOrder, DoorOrder.CLOSE);
+    Tasks.push(new Task(Topic.door, DoorOrder.CLOSE));
+    return this.mqttService.publish(Topic.doorOrder, DoorOrder.CLOSE);
   }
 
   openDoor() {
-    Tasks.push(new Task(Topic.poulaillerDoor, DoorOrder.OPEN));
-    return this.mqttService.publish(Topic.poulaillerDoorOrder, DoorOrder.OPEN);
-  }
-
-  forceMoveUpDoor() {
-    return this.mqttService.publish(
-      Topic.poulaillerDoorOrder,
-      DoorOrder.FORCE_MOVE_UP,
-    );
-  }
-
-  forceMoveDownDoor() {
-    return this.mqttService.publish(
-      Topic.poulaillerDoorOrder,
-      DoorOrder.FORCE_MOVE_DOWN,
-    );
+    Tasks.push(new Task(Topic.door, DoorOrder.OPEN));
+    return this.mqttService.publish(Topic.doorOrder, DoorOrder.OPEN);
   }
 }

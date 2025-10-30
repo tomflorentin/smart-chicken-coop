@@ -18,8 +18,6 @@ const Actions: React.FC<ActionProps> = ({ orderSent }) => {
         // { name: 'Activer l\'alerte', endpoint: 'alert/enable', icon: "pi-bell" },
         // { name: 'Désactiver l\'alerte', endpoint: 'alert/disable', icon: "pi-bell" },
         { name: 'Actualiser les horaires', endpoint: 'timer', icon: "pi-clock" },
-        { name: 'Monter la porte (1s)', endpoint: 'door/force-move-up', icon: "pi-angle-up" },
-        { name: 'Descendre la porte (1s)', endpoint: 'door/force-move-down', icon: "pi-angle-down" },
     ];
 
     const handleAction = async (endpoint: string) => {
