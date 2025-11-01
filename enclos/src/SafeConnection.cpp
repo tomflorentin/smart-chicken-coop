@@ -36,7 +36,6 @@ void SafeConnection::work() {
         this->connectionLostTime = 0;
     }
     if (WiFi.status() == WL_CONNECTED) {
-        Log("Connected to Wifi + " + String(this->backupMode ? "backup" : "normal"));
         if (this->mqttClient.state() != MQTT_CONNECTED) {
             Log("Not connected to MQTT");
             this->mqttClient.disconnect();
@@ -45,10 +44,13 @@ void SafeConnection::work() {
                     this->mqttClient.subscribe(this->topics[i]);
                 }
                 this->mqttClient.publish((this->name + "/wifi").c_str(), this->backupMode ? "backup" : "normal");
+                if (!this->bootMessageSent) {
+                    this->mqttClient.publish("enclos/boot", "ready");
+                    this->bootMessageSent = true;
+                }
             }
         } else {
             // ALl OK
-            Log("MQTT Client loop");
             this->mqttClient.loop();
         }
     } else {
@@ -92,7 +94,6 @@ bool SafeConnection::needToSwitchToBackup() {
             return true;
         }
     } else {
-        Log("Connection OK");
         connectionLostTime = 0;
         return false;
     }

@@ -100,39 +100,6 @@ const ChickenCoop: React.FC<{ state: StateType | null }> = ({ state }) => {
         }
     };
 
-    const getAlertBadge = (status: AlertStatus | null, detections: Detections) => {
-        const detectionsStr = detections.dates?.length ? `${detections.dates.length} det` : "";
-        const totalDetectionTime = detections.timeInAlert ? `${Math.round(detections.timeInAlert / (60000))}min` : "";
-        const additionalStr = `${detectionsStr} ${totalDetectionTime}`;
-        const getAdditionalBadge = (text: string) => (text.length > 1) && <Badge value={text} severity="info" />;
-
-        if (!status) return <Badge value="?" severity="warning" />;
-
-        let badgeValue = '';
-        let severity: "success" | "warning" | "danger" = "warning";
-
-        if (status.startsWith('enabled')) {
-            badgeValue = "Actif";
-            severity = "success";
-        } else if (status.startsWith('alert')) {
-            badgeValue = "Alerte!";
-            severity = "warning";
-        } else if (status.startsWith('disabled')) {
-            badgeValue = "Désactivé";
-            severity = "danger";
-        } else {
-            badgeValue = "Inconnu";
-        }
-
-        return (
-            <div>
-                <Badge value={badgeValue} severity={severity} />
-                {getAdditionalBadge(additionalStr)}
-            </div>
-        );
-    };
-
-
     const getFenceBadge = (status: FenceStatus | null) => {
         if (!status) return <Badge value="?" severity="warning" />;
         switch (true) {
@@ -160,10 +127,6 @@ const ChickenCoop: React.FC<{ state: StateType | null }> = ({ state }) => {
             const onlineDuration = bootTime ? formatBootTime(bootTime) : 'Inconnu';
             return { status: 'En ligne', severity: 'success', duration: `depuis ${onlineDuration}` };
         }
-    };
-
-    const formatLastSeen = (date: Date | null) => {
-        return date ? new Date(date).toLocaleTimeString() : 'Inconnu';
     };
 
     const formatBootTime = (bootTime: Date) => {
@@ -198,15 +161,10 @@ const ChickenCoop: React.FC<{ state: StateType | null }> = ({ state }) => {
                         <span className="p-ml-2">Porte en cours de mouvement...</span>
                     </div>
                 )}
-                <p>Dernière connexion : {formatLastSeen(state.enclos.lastSeen)}</p>
                 <p>Wifi {state.enclos.wifi}</p>
                 <div className="p-mt-3">
                     <i className="pi pi-bolt p-mr-2" />
                     Clôture électrique: {getFenceBadge(state.enclos.electricFence.status)}
-                </div>
-                <div className="p-mt-2">
-                    <i className="pi pi-exclamation-circle p-mr-2" />
-                    Système d'alerte: {getAlertBadge(state.enclos.alertSystem.status, state.enclos.alertSystem.detections)}
                 </div>
             </Card>
         </div>

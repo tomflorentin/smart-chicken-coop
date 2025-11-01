@@ -11,14 +11,20 @@ V2Door::V2Door(MQTTServer &_server, uint8_t _up_pin, uint8_t _down_pin) :
 
 void V2Door::open() {
     Log("Door opening");
+    this->server.publish("enclos/door/info", "opening");
+    this->downPin.write(0);
     this->upPin.write(168);
     this->state = DoorStatus::OPENING;
+    this->actionStartTime = millis();
 }
 
 void V2Door::close() {
     Log("Door closing");
+    this->server.publish("enclos/door/info", "closing");
+    this->upPin.write(0);
     this->downPin.write(168);
-    this->state = DoorStatus::OPENING;
+    this->state = DoorStatus::CLOSING;
+    this->actionStartTime = millis();
 }
 
 void V2Door::setup() {
@@ -32,6 +38,7 @@ void V2Door::work() {
         case DoorStatus::OPENING:
             if (currentTime - this->actionStartTime >= OPEN_DURATION) {
                 this->upPin.write(0);
+                this->downPin.write(0);
                 this->state = DoorStatus::OPENED;
                 this->server.publish("enclos/door/info", "opened");
                 Log("Door opened");
@@ -40,6 +47,7 @@ void V2Door::work() {
         case DoorStatus::CLOSING:
             if (currentTime - this->actionStartTime >= CLOSE_DURATION) {
                 this->downPin.write(0);
+                this->upPin.write(0);
                 this->state = DoorStatus::CLOSED;
                 this->server.publish("enclos/door/info", "closed");
                 Log("Door closed");

@@ -26,6 +26,7 @@ private:
     bool backupMode = false;
     unsigned long lastScanTime = 0;
     bool isScanning = false;
+    bool bootMessageSent = false;
 
     char const * topics[10] = {nullptr};
     unsigned short topicIndex = 0;
